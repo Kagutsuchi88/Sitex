@@ -3,6 +3,8 @@ from flask_login import UserMixin
 from datetime import datetime, timedelta
 import secrets
 from extensions import db
+from itsdangerous import URLSafeTimedSerializer
+from flask import current_app
 
 class Empleado(db.Model, UserMixin):
     __tablename__ = 'empleado'
