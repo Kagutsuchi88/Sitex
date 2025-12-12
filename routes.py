@@ -181,27 +181,29 @@ def register():
             contrasena=hash_cifrado,
             temporal=True,
             activo=True,
-            email_confirmado=False,  # NUEVO
+            email_confirmado=False,  # NO confirmado inicialmente
             aceptado_terminos=form.aceptar_terminos.data
         )
         
-         # routes.py (dentro de register())
+        # 1) Guardar usuario primero para que exista en la BD
         db.session.add(nuevo_empleado)
-        db.session.commit()  # ahora tiene id
+        db.session.commit()  # ahora tiene id y podemos generar/almacenar el token
 
-        # Generar token y guardarlo en DB
+        # 2) Generar token y persistirlo (generate_confirmation_token escribe token en el objeto)
         token = nuevo_empleado.generate_confirmation_token()
-        db.session.commit()  # persiste token_confirmacion + expiry
+        db.session.commit()  # persiste token_confirmacion y token_confirmacion_expiry
 
+        # 3) Intentar enviar email; loggear cualquier excepción para ver el error en Vercel
+        import traceback
         try:
             enviar_email_confirmacion(nuevo_empleado, token)
             flash(f"¡Registro exitoso! Se ha enviado un email de confirmación a {nuevo_empleado.email}.", "success")
         except Exception as e:
-            import traceback
             print("Error enviando email:", e)
             traceback.print_exc()
             flash("Usuario creado, pero hubo un error al enviar el email. Contacte al administrador.", "warning")
         
+        # Auditoría
         registrar_auditoria('CREATE', 'empleado', nuevo_empleado.id_empleados, None, {
             'usuario': nuevo_empleado.usuario,
             'nombre': nuevo_empleado.nombre_empleado
