@@ -74,22 +74,23 @@ class Empleado(db.Model, UserMixin):
         return not self.activo
 
     # NUEVO: Generar token de confirmación de email
-    def generate_confirmation_token(self):
-        """Generar token para confirmar email"""
-        self.token_confirmacion = secrets.token_urlsafe(32)
-        self.token_confirmacion_expiry = datetime.utcnow() + timedelta(hours=24)
-        return self.token_confirmacion
+    def generate_confirmation_token(self, hours_valid=24):
+        token = secrets.token_urlsafe(48)
+        self.token_confirmacion = token
+        self.token_confirmacion_expiry = datetime.utcnow() + timedelta(hours=hours_valid)
+        return token
 
     # NUEVO: Verificar token de confirmación
     def verify_confirmation_token(self, token):
-        """Verificar token de confirmación de email"""
-        if self.token_confirmacion == token and self.token_confirmacion_expiry > datetime.utcnow():
-            return True
-        return False
+        if not self.token_confirmacion or self.token_confirmacion != token:
+            return False
+        if not getattr(self, 'token_confirmacion_expiry', None):
+            return False
+        return datetime.utcnow() < self.token_confirmacion_expiry
+
 
     # NUEVO: Confirmar email
     def confirmar_email(self):
-        """Marcar email como confirmado"""
         self.email_confirmado = True
         self.token_confirmacion = None
         self.token_confirmacion_expiry = None
