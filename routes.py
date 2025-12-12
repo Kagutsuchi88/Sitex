@@ -198,6 +198,8 @@ def register():
         # except Exception as e:
         #     flash(f"Usuario creado, pero hubo un error al enviar el email. Contacte al administrador.", "warning")
         #     print(f"Error enviando email: {e}")
+
+        flash(f"¡Registro exitoso! Puedes iniciar sesión con tu usuario.", "success")
         
         registrar_auditoria('CREATE', 'empleado', nuevo_empleado.id_empleados, None, {
             'usuario': nuevo_empleado.usuario,
