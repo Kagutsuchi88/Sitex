@@ -181,7 +181,7 @@ def register():
             contrasena=hash_cifrado,
             temporal=True,
             activo=True,
-            email_confirmado=False,  # NUEVO
+            email_confirmado=True,  # NUEVO
             aceptado_terminos=form.aceptar_terminos.data
         )
         
@@ -194,10 +194,10 @@ def register():
         # NUEVO: Enviar email de confirmación
         try:
             enviar_email_confirmacion(nuevo_empleado, token)
-            flash(f"¡Registro exitoso! Se ha enviado un email de confirmación a {nuevo_empleado.email}.", "success")
-        except Exception as e:
-            flash(f"Usuario creado, pero hubo un error al enviar el email. Contacte al administrador.", "warning")
-            print(f"Error enviando email: {e}")
+        #     flash(f"¡Registro exitoso! Se ha enviado un email de confirmación a {nuevo_empleado.email}.", "success")
+        # except Exception as e:
+        #     flash(f"Usuario creado, pero hubo un error al enviar el email. Contacte al administrador.", "warning")
+        #     print(f"Error enviando email: {e}")
         
         registrar_auditoria('CREATE', 'empleado', nuevo_empleado.id_empleados, None, {
             'usuario': nuevo_empleado.usuario,
