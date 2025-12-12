@@ -181,7 +181,7 @@ def register():
             contrasena=hash_cifrado,
             temporal=True,
             activo=True,
-            email_confirmado=True,  # NUEVO
+            email_confirmado=False,  # NUEVO
             aceptado_terminos=form.aceptar_terminos.data
         )
         
@@ -191,14 +191,13 @@ def register():
         db.session.add(nuevo_empleado)
         db.session.commit()
         
-        # NUEVO: Enviar email de confirmación (OPCIONAL - intenta enviar pero no falla si hay error)
+        # NUEVO: Enviar email de confirmación
         try:
             enviar_email_confirmacion(nuevo_empleado, token)
+            flash(f"¡Registro exitoso! Se ha enviado un email de confirmación a {nuevo_empleado.email}.", "success")
         except Exception as e:
-            print(f"Error enviando email (ignorado): {e}")
-
-        # Mensaje de éxito sin mencionar email
-        flash(f"¡Registro exitoso! Puedes iniciar sesión con tu usuario: {nuevo_empleado.usuario}", "success")
+            flash(f"Usuario creado, pero hubo un error al enviar el email. Contacte al administrador.", "warning")
+            print(f"Error enviando email: {e}")
         
         registrar_auditoria('CREATE', 'empleado', nuevo_empleado.id_empleados, None, {
             'usuario': nuevo_empleado.usuario,
@@ -1313,6 +1312,8 @@ def export_data(tipo):
 
 # Agregar estas rutas al final de admin_bp en routes.py
 
+# ============= GESTIÃ"N COMPLETA DE TANQUES =============
+
 # ============= GESTIÓN COMPLETA DE TANQUES =============
 
 @admin_bp.route("/tanques/crear", methods=["GET", "POST"])
@@ -1393,6 +1394,20 @@ def toggle_tanque(tanque_id):
     flash(f"Tanque {estado}", "success")
     return redirect(url_for("dashboard.tanques"))
 
+
+def calcular_altura_maxima(capacidad_galones):
+    """Calcular altura máxima en cm basada en capacidad del tanque"""
+    # Radio estándar en cm (ajustar según tanques reales)
+    radio_cm = 125  # 2.5m de diámetro
+    
+    # Volumen en cm³ = capacidad en galones * 3785.411784
+    volumen_cm3 = capacidad_galones * 3785.411784
+    
+    # Altura = Volumen / (π * r²)
+    area_base = 3.14159 * (radio_cm ** 2)
+    altura_cm = volumen_cm3 / area_base
+    
+    return round(altura_cm, 2)
 
 # ============= CARGUE DE EMERGENCIA =============
 @medicion_bp.route("/cargue_emergencia", methods=["GET", "POST"])
