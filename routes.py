@@ -192,14 +192,14 @@ def register():
         db.session.commit()
         
         # NUEVO: Enviar email de confirmación
-        try:
-            enviar_email_confirmacion(nuevo_empleado, token)
-        #     flash(f"¡Registro exitoso! Se ha enviado un email de confirmación a {nuevo_empleado.email}.", "success")
-        # except Exception as e:
-        #     flash(f"Usuario creado, pero hubo un error al enviar el email. Contacte al administrador.", "warning")
-        #     print(f"Error enviando email: {e}")
+       # NUEVO: Enviar email de confirmación (OPCIONAL - intenta enviar pero no falla si hay error)
+      try:
+          enviar_email_confirmacion(nuevo_empleado, token)
+      except Exception as e:
+          print(f"Error enviando email (ignorado): {e}")
 
-        flash(f"¡Registro exitoso! Puedes iniciar sesión con tu usuario.", "success")
+      # Mensaje de éxito sin mencionar email
+      flash(f"¡Registro exitoso! Puedes iniciar sesión con tu usuario: {nuevo_empleado.usuario}", "success")
         
         registrar_auditoria('CREATE', 'empleado', nuevo_empleado.id_empleados, None, {
             'usuario': nuevo_empleado.usuario,
