@@ -1,0 +1,11 @@
+SECRET_KEY=supersecreto123cambiaestoenproduccion
+SESSION_SECRET=otrosecreto
+DATABASE_URL=mysql+pymysql://root:@localhost/sitex_prueba  # Local MySQL
+
+# Correo Gmail (para pruebas)
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=True
+MAIL_USERNAME=alarconrivasjuancamilo016@gmail.com
+MAIL_PASSWORD=lfgf ypgc pwdz npqv
+MAIL_DEFAULT_SENDER=noreply@Sitex.com

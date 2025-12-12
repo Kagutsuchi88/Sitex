@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Historial Cargues de Emergencia - Hayuelos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-exclamation-triangle-fill text-danger"></i> Historial de Cargues de Emergencia
+        </h1>
+        <a href="{{ url_for('medicion.cargue_emergencia') }}" class="btn btn-danger">
+            <i class="bi bi-plus-circle"></i> Nuevo Cargue
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            {% if cargues.items %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Fecha/Hora</th>
+                            <th>Tanque</th>
+                            <th>Medida Anterior (cm)</th>
+                            <th>Medida Posterior (cm)</th>
+                            <th>Formato Entrega</th>
+                            <th>Galones Totales</th>
+                            <th>Empleado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cargue in cargues.items %}
+                        <tr>
+                            <td>{{ cargue.fecha.strftime('%d/%m/%Y %H:%M') if cargue.fecha else 'N/A' }}</td>
+                            <td>
+                                {% if cargue.tanque %}
+                                    Tanque {{ cargue.tanque.id_tanques }} - {{ cargue.tanque.tipo_combustible }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>{{ cargue.medida_anterior or 'N/A' }}</td>
+                            <td>{{ cargue.medida_posterior or 'N/A' }}</td>
+                            <td>
+                                {% if cargue.formato_de_entrega == 'pipa' %}
+                                    <span class="badge bg-primary">Pipa</span>
+                                {% elif cargue.formato_de_entrega == 'camion' %}
+                                    <span class="badge bg-success">Camión</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ cargue.formato_de_entrega }}</span>
+                                {% endif %}
+                            </td>
+                            <td><strong>{{ cargue.galones_totales or '0' }} gal</strong></td>
+                            <td>{{ cargue.empleado.nombre_empleado if cargue.empleado else 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            {% if cargues.pages > 1 %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if cargues.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('medicion.historial_cargues', page=cargues.prev_num) }}">Anterior</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for page_num in cargues.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != cargues.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('medicion.historial_cargues', page=page_num) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if cargues.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('medicion.historial_cargues', page=cargues.next_num) }}">Siguiente</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-exclamation-triangle display-1 text-muted"></i>
+                <h4 class="mt-3">No hay cargues de emergencia registrados</h4>
+                <p class="text-muted">Comience registrando su primer cargue de emergencia.</p>
+                <a href="{{ url_for('medicion.cargue_emergencia') }}" class="btn btn-danger">
+                    <i class="bi bi-plus-circle"></i> Registrar Primer Cargue
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

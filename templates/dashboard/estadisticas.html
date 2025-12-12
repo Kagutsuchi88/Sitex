@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}Estadísticas - Hayuelos{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Estilos personalizados para estadísticas */
+.stat-card {
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.stat-number {
+    font-size: 3rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #E10000 0%, #FF3030 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.chart-container {
+    position: relative;
+    height: 400px;
+    margin: 20px 0;
+}
+
+.comparison-bar {
+    height: 40px;
+    background: #f0f0f0;
+    border-radius: 20px;
+    overflow: hidden;
+    margin: 15px 0;
+    position: relative;
+}
+
+.comparison-fill {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    transition: width 0.8s ease;
+}
+
+.metric-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+}
+
+.metric-value {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: #E10000;
+}
+
+.pagination-custom .page-link {
+    border-radius: 10px;
+    margin: 0 5px;
+    border: 2px solid #E10000;
+    color: #E10000;
+    font-weight: 600;
+}
+
+.pagination-custom .page-link:hover {
+    background: #E10000;
+    color: white;
+}
+
+.pagination-custom .page-item.active .page-link {
+    background: linear-gradient(135deg, #E10000 0%, #FF3030 100%);
+    border-color: #E10000;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-graph-up-arrow"></i> Estadísticas del Sistema
+        </h1>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <!-- Indicador de página actual -->
+    <div class="alert alert-info mb-4">
+        <i class="bi bi-info-circle"></i>
+        Mostrando estadísticas <strong>{{ (page - 1) * per_page + 1 }}</strong> 
+        a <strong>{{ page * per_page if page * per_page < total_pages * per_page else total_pages * per_page }}</strong>
+        de <strong>{{ total_pages * per_page }}</strong> disponibles
+    </div>
+
+    <!-- Tarjetas de estadísticas -->
+    {% for stat in estadisticas %}
+    <div class="card stat-card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="bi bi-bar-chart-fill"></i> Estadística {{ stat.numero }}: {{ stat.titulo }}
+            </h4>
+            <p class="mb-0 mt-2"><small>{{ stat.descripcion }}</small></p>
+        </div>
+        <div class="card-body">
+            {% if stat.tipo == 'bar' %}
+                <!-- Gráfico de Barras -->
+                <div class="chart-container">
+                    <canvas id="chart{{ stat.numero }}"></canvas>
+                </div>
+                
+            {% elif stat.tipo == 'line' %}
+                <!-- Gráfico de Líneas -->
+                <div class="chart-container">
+                    <canvas id="chart{{ stat.numero }}"></canvas>
+                </div>
+                
+            {% elif stat.tipo == 'pie' %}
+                <!-- Gráfico de Pastel -->
+                <div class="chart-container">
+                    <canvas id="chart{{ stat.numero }}"></canvas>
+                </div>
+                
+            {% elif stat.tipo == 'comparison' %}
+                <!-- Comparación Visual -->
+                <div class="row text-center mb-4">
+                    <div class="col-md-4">
+                        <div class="metric-card">
+                            <i class="bi bi-fuel-pump-fill fs-1 text-success mb-3"></i>
+                            <div class="metric-value">{{ "%.0f"|format(stat.datos.cargado) }}</div>
+                            <p class="mb-0">Galones Cargados</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="metric-card">
+                            <i class="bi bi-cart-fill fs-1 text-danger mb-3"></i>
+                            <div class="metric-value">{{ "%.0f"|format(stat.datos.vendido) }}</div>
+                            <p class="mb-0">Galones Vendidos</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="metric-card">
+                            <i class="bi bi-calculator-fill fs-1 text-primary mb-3"></i>
+                            <div class="metric-value">{{ "%.0f"|format(stat.datos.diferencia) }}</div>
+                            <p class="mb-0">Diferencia</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Barras comparativas -->
+                {% set total = stat.datos.cargado + stat.datos.vendido %}
+                {% set porcentaje_cargado = (stat.datos.cargado / total * 100) if total > 0 else 0 %}
+                {% set porcentaje_vendido = (stat.datos.vendido / total * 100) if total > 0 else 0 %}
+                
+                <div class="comparison-bar">
+                    <div class="comparison-fill" 
+                         style="width: {{ porcentaje_cargado }}%; background: linear-gradient(90deg, #00E100 0%, #00C200 100%);">
+                        Cargado: {{ "%.1f"|format(porcentaje_cargado) }}%
+                    </div>
+                </div>
+                
+                <div class="comparison-bar">
+                    <div class="comparison-fill" 
+                         style="width: {{ porcentaje_vendido }}%; background: linear-gradient(90deg, #E10000 0%, #C20000 100%);">
+                        Vendido: {{ "%.1f"|format(porcentaje_vendido) }}%
+                    </div>
+                </div>
+                
+            {% elif stat.tipo == 'metric' %}
+                <!-- Métrica Simple -->
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="metric-card">
+                            <i class="bi bi-speedometer2 fs-1 mb-3"></i>
+                            <div class="metric-value">{{ stat.datos.promedio }}</div>
+                            <p class="mb-0">{{ stat.unidad }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card border-0 bg-light h-100">
+                            <div class="card-body d-flex flex-column justify-content-center">
+                                <h5><i class="bi bi-info-circle text-primary"></i> Información Adicional:</h5>
+                                <ul class="list-unstyled mt-3">
+                                    <li class="mb-2">
+                                        <i class="bi bi-calendar3 text-success"></i>
+                                        <strong>Período analizado:</strong> {{ stat.datos.total_dias }} días
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bi bi-clipboard-data text-info"></i>
+                                        <strong>Total de mediciones:</strong> {{ stat.datos.total_mediciones }}
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-graph-up text-primary"></i>
+                                        <strong>Actividad:</strong> 
+                                        {% if stat.datos.promedio > 10 %}
+                                            <span class="badge bg-success">Alta</span>
+                                        {% elif stat.datos.promedio > 5 %}
+                                            <span class="badge bg-warning">Media</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Baja</span>
+                                        {% endif %}
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Paginación -->
+    {% if total_pages > 1 %}
+    <nav aria-label="Navegación de estadísticas">
+        <ul class="pagination pagination-custom justify-content-center">
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('dashboard.estadisticas', page=page-1) }}">
+                    <i class="bi bi-chevron-left"></i> Anterior
+                </a>
+            </li>
+            
+            {% for p in range(1, total_pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('dashboard.estadisticas', page=p) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            
+            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('dashboard.estadisticas', page=page+1) }}">
+                    Siguiente <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ✅ CÓDIGO JAVASCRIPT CORREGIDO - SIN ERRORES DE SINTAXIS
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📊 Inicializando gráficos...');
+    
+    {% for stat in estadisticas %}
+        {% if stat.tipo in ['bar', 'line', 'pie'] %}
+        // Gráfico {{ stat.numero }}: {{ stat.titulo }}
+        (function() {
+            const ctx = document.getElementById('chart{{ stat.numero }}');
+            if (!ctx) {
+                console.error('❌ No se encontró el canvas para chart{{ stat.numero }}');
+                return;
+            }
+            
+            console.log('✅ Creando gráfico {{ stat.numero }}');
+            
+            {% if stat.tipo == 'bar' %}
+            // GRÁFICO DE BARRAS
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: {{ stat.datos.keys()|list|tojson }},
+                    datasets: [{
+                        label: '{{ stat.titulo }}',
+                        data: {{ stat.datos.values()|list|tojson }},
+                        backgroundColor: 'rgba(225, 0, 0, 0.7)',
+                        borderColor: 'rgba(225, 0, 0, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            display: true, 
+                            position: 'top' 
+                        },
+                        title: { 
+                            display: false 
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '{{ stat.unidad }}'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            {% elif stat.tipo == 'line' %}
+            // GRÁFICO DE LÍNEAS
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [
+                        {% for key, val in stat.datos.items() %}
+                            "{{ val.nombre }}"{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    ],
+                    datasets: [{
+                        label: '{{ stat.titulo }}',
+                        data: [
+                            {% for key, val in stat.datos.items() %}
+                                {{ val.galones }}{% if not loop.last %},{% endif %}
+                            {% endfor %}
+                        ],
+                        borderColor: 'rgba(225, 0, 0, 1)',
+                        backgroundColor: 'rgba(225, 0, 0, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            display: true, 
+                            position: 'top' 
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '{{ stat.unidad }}'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            {% elif stat.tipo == 'pie' %}
+            // GRÁFICO DE PASTEL
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: {{ stat.datos.keys()|list|tojson }},
+                    datasets: [{
+                        data: {{ stat.datos.values()|list|tojson }},
+                        backgroundColor: [
+                            'rgba(225, 0, 0, 0.8)',
+                            'rgba(0, 225, 225, 0.8)',
+                            'rgba(0, 225, 0, 0.8)',
+                            'rgba(255, 165, 0, 0.8)',
+                            'rgba(138, 43, 226, 0.8)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom' 
+                        }
+                    }
+                }
+            });
+            {% endif %}
+            
+            console.log('✅ Gráfico {{ stat.numero }} creado exitosamente');
+        })();
+        {% endif %}
+    {% endfor %}
+    
+    console.log('✅ Todos los gráficos inicializados');
+});
+</script>
+{% endblock %}

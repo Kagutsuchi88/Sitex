@@ -1,0 +1,1161 @@
+/* ========================================
+   LOGIN Y REGISTER - FORMAS ORGÃNICAS (BLOBS) ROJO SUAVE CON BLOBS BLANCOS ANIMADOS
+   ======================================== */
+body.auth-page {
+    background: #FF4444 !important;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Blob blanco grande superior derecha */
+body.auth-page::before {
+    content: '';
+    position: absolute;
+    top: -15%;
+    right: -8%;
+    width: 55%;
+    height: 65%;
+    background: #FFFFFF;
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    transform: rotate(-15deg);
+    animation: floatShape1 20s ease-in-out infinite;
+    z-index: 0;
+    box-shadow: 0 25px 70px rgba(255, 255, 255, 0.3);
+}
+
+/* Blob blanco grande inferior izquierda */
+body.auth-page::after {
+    content: '';
+    position: absolute;
+    bottom: -12%;
+    left: -8%;
+    width: 50%;
+    height: 60%;
+    background: #FFFFFF;
+    border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%;
+    transform: rotate(15deg);
+    animation: floatShape2 25s ease-in-out infinite;
+    z-index: 0;
+    box-shadow: 0 25px 70px rgba(255, 255, 255, 0.3);
+}
+
+/* Animaciones suaves de las formas */
+@keyframes floatShape1 {
+    0%, 100% { 
+        transform: rotate(-15deg) translateY(0px) translateX(0px) scale(1);
+        border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    }
+    33% {
+        transform: rotate(-18deg) translateY(-25px) translateX(15px) scale(1.05);
+        border-radius: 40% 60% 65% 35% / 35% 45% 55% 65%;
+    }
+    66% { 
+        transform: rotate(-12deg) translateY(-15px) translateX(-10px) scale(0.98);
+        border-radius: 50% 50% 60% 40% / 40% 50% 50% 60%;
+    }
+}
+
+@keyframes floatShape2 {
+    0%, 100% { 
+        transform: rotate(15deg) translateY(0px) translateX(0px) scale(1);
+        border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%;
+    }
+    33% {
+        transform: rotate(18deg) translateY(20px) translateX(-15px) scale(1.05);
+        border-radius: 65% 35% 40% 60% / 65% 55% 45% 35%;
+    }
+    66% { 
+        transform: rotate(12deg) translateY(35px) translateX(10px) scale(0.98);
+        border-radius: 40% 60% 50% 50% / 60% 50% 50% 40%;
+    }
+}/* 
+ * Hayuelos EstaciÃ³n de Servicios - Estilos Corporativos con Degradados Vibrantes
+ * Colores: Negro #000000, Rojo #E10000, Azul #00E1E1, Verde #00E100
+ * Sistema de diferenciaciÃ³n por roles: Admin (Rojo), Encargado (Azul), Islero (Verde)
+ */
+
+/* Importar tipografÃ­a corporativa */
+@import url('https://fonts.googleapis.com/css2?family=Century+Gothic:wght@400;700&display=swap');
+
+/* ========================================
+   VARIABLES DE COLORES CORPORATIVOS
+   ======================================== */
+:root {
+    --hayuelos-negro: #000000;
+    --hayuelos-rojo: #E10000;
+    --hayuelos-azul: #00E1E1;
+    --hayuelos-verde: #00E100;
+    --hayuelos-blanco: #FFFFFF;
+    
+    /* Degradados vibrantes corporativos */
+    --gradient-primary: linear-gradient(135deg, #E10000 0%, #FF3030 50%, #E10000 100%);
+    --gradient-secondary: linear-gradient(135deg, #00E1E1 0%, #30F0F0 50%, #00E1E1 100%);
+    --gradient-success: linear-gradient(135deg, #00E100 0%, #30F030 50%, #00E100 100%);
+    --gradient-dark: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+    
+    /* Degradado hero multicolor vibrante */
+    --gradient-hero: linear-gradient(135deg, 
+        #E10000 0%, 
+        #FF0040 20%,
+        #00E1E1 50%,
+        #00FFE1 70%,
+        #00E100 100%);
+    
+    /* Degradados para cada rol */
+    --gradient-admin: linear-gradient(135deg, 
+        #E10000 0%, 
+        #FF2020 25%,
+        #FF0000 50%,
+        #E10000 75%,
+        #C20000 100%);
+    
+    --gradient-encargado: linear-gradient(135deg, 
+        #00E1E1 0%, 
+        #20F0F0 25%,
+        #00FFFF 50%,
+        #00E1E1 75%,
+        #00C2C2 100%);
+    
+    --gradient-islero: linear-gradient(135deg, 
+        #00E100 0%, 
+        #20F020 25%,
+        #00FF00 50%,
+        #00E100 75%,
+        #00C200 100%);
+}
+
+/* ========================================
+   TIPOGRAFÃA CORPORATIVA
+   ======================================== */
+body {
+    font-family: 'Century Gothic', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 400;
+    background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+    min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6, .navbar-brand {
+    font-weight: 700;
+    font-style: italic;
+}
+
+/* ========================================
+   NAVBAR BASE CON DEGRADADO MULTICOLOR
+   ======================================== */
+.navbar-dark.bg-primary {
+    background: var(--gradient-dark) !important;
+    border-bottom: 5px solid transparent;
+    border-image: var(--gradient-hero);
+    border-image-slice: 1;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.4);
+    position: relative;
+}
+
+.navbar-dark.bg-primary::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: var(--gradient-hero);
+    animation: borderFlow 8s linear infinite;
+    background-size: 200% 100%;
+}
+
+@keyframes borderFlow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
+
+/* ========================================
+   DIFERENCIACIÃ“N POR ROL - NAVBAR
+   ======================================== */
+
+/* ADMIN - Navbar Rojo */
+body.role-admin .navbar-dark.bg-primary {
+    background: var(--gradient-admin) !important;
+    background-size: 200% 200%;
+    animation: gradientPulse 6s ease infinite;
+}
+
+body.role-admin .navbar-dark.bg-primary::after {
+    background: linear-gradient(90deg, 
+        #E10000 0%, 
+        #FF4040 25%, 
+        #E10000 50%, 
+        #FF4040 75%, 
+        #E10000 100%);
+    background-size: 200% 100%;
+}
+
+/* ENCARGADO - Navbar Azul */
+body.role-encargado .navbar-dark.bg-primary {
+    background: var(--gradient-encargado) !important;
+    background-size: 200% 200%;
+    animation: gradientPulse 6s ease infinite;
+}
+
+body.role-encargado .navbar-dark.bg-primary::after {
+    background: linear-gradient(90deg, 
+        #00E1E1 0%, 
+        #40F0F0 25%, 
+        #00E1E1 50%, 
+        #40F0F0 75%, 
+        #00E1E1 100%);
+    background-size: 200% 100%;
+}
+
+/* ISLERO - Navbar Verde */
+body.role-islero .navbar-dark.bg-primary {
+    background: var(--gradient-islero) !important;
+    background-size: 200% 200%;
+    animation: gradientPulse 6s ease infinite;
+}
+
+body.role-islero .navbar-dark.bg-primary::after {
+    background: linear-gradient(90deg, 
+        #00E100 0%, 
+        #40F040 25%, 
+        #00E100 50%, 
+        #40F040 75%, 
+        #00E100 100%);
+    background-size: 200% 100%;
+}
+
+@keyframes gradientPulse {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* ========================================
+   ELEMENTOS DEL NAVBAR
+   ======================================== */
+.navbar-brand {
+    color: var(--hayuelos-blanco) !important;
+    font-weight: bold;
+    font-size: 1.5rem;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+    transform: scale(1.08);
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+}
+
+.nav-link {
+    color: var(--hayuelos-blanco) !important;
+    transition: all 0.3s ease;
+    position: relative;
+    padding: 0.5rem 1rem !important;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    transform: translateY(-2px);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background: var(--gradient-hero);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+    border-radius: 2px;
+}
+
+.nav-link:hover::after {
+    width: 80%;
+}
+
+.dropdown-menu {
+    background: var(--gradient-dark);
+    border: 2px solid var(--hayuelos-rojo);
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+}
+
+.dropdown-item {
+    color: var(--hayuelos-blanco) !important;
+    transition: all 0.3s ease;
+    border-radius: 10px;
+    margin: 5px;
+    font-weight: 500;
+}
+
+.dropdown-item:hover {
+    background: var(--gradient-primary) !important;
+    transform: translateX(8px);
+}
+
+/* ========================================
+   BOTONES CON DEGRADADOS VIBRANTES
+   ======================================== */
+.btn {
+    border-radius: 30px;
+    font-weight: 600;
+    padding: 12px 30px;
+    transition: all 0.4s ease;
+    border: none;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+    width: 400px;
+    height: 400px;
+}
+
+.btn:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.btn:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    background-size: 200% 200%;
+    color: var(--hayuelos-blanco);
+    animation: gradientShift 4s ease infinite;
+}
+
+.btn-primary:hover {
+    color: var(--hayuelos-blanco);
+    animation: gradientShift 2s ease infinite;
+}
+
+.btn-success {
+    background: var(--gradient-success);
+    background-size: 200% 200%;
+    color: var(--hayuelos-negro);
+    animation: gradientShift 4s ease infinite;
+}
+
+.btn-success:hover {
+    color: var(--hayuelos-negro);
+    animation: gradientShift 2s ease infinite;
+}
+
+.btn-info {
+    background: var(--gradient-secondary);
+    background-size: 200% 200%;
+    color: var(--hayuelos-negro);
+    animation: gradientShift 4s ease infinite;
+}
+
+.btn-info:hover {
+    color: var(--hayuelos-negro);
+    animation: gradientShift 2s ease infinite;
+}
+
+.btn-secondary {
+    background: var(--gradient-dark);
+    background-size: 200% 200%;
+    color: var(--hayuelos-blanco);
+}
+
+.btn-secondary:hover {
+    color: var(--hayuelos-blanco);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #FFA500 0%, #FFB733 50%, #FFA500 100%);
+    background-size: 200% 200%;
+    color: var(--hayuelos-negro);
+    animation: gradientShift 4s ease infinite;
+}
+
+.btn-warning:hover {
+    color: var(--hayuelos-negro);
+    animation: gradientShift 2s ease infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* ========================================
+   CARDS CON DEGRADADOS Y EFECTOS 3D
+   ======================================== */
+.card {
+    border-radius: 20px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--hayuelos-blanco);
+    position: relative;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: var(--gradient-hero);
+    background-size: 200% 100%;
+    animation: borderFlow 6s linear infinite;
+}
+
+.card:hover {
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+}
+
+.card-header {
+    background: var(--gradient-primary) !important;
+    background-size: 200% 200%;
+    animation: gradientShift 6s ease infinite;
+    color: var(--hayuelos-blanco);
+    border-radius: 20px 20px 0 0 !important;
+    font-weight: bold;
+    padding: 1.25rem;
+    border: none;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.card-header.bg-primary {
+    background: var(--gradient-secondary) !important;
+    background-size: 200% 200%;
+    animation: gradientShift 6s ease infinite;
+    color: var(--hayuelos-negro);
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+.card-header.bg-info {
+    background: var(--gradient-secondary) !important;
+    background-size: 200% 200%;
+    animation: gradientShift 6s ease infinite;
+    color: var(--hayuelos-negro);
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+.card-header.bg-success {
+    background: var(--gradient-success) !important;
+    background-size: 200% 200%;
+    animation: gradientShift 6s ease infinite;
+    color: var(--hayuelos-negro);
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+.card-header.bg-warning {
+    background: var(--gradient-success) !important;
+    background-size: 200% 200%;
+    animation: gradientShift 6s ease infinite;
+    color: var(--hayuelos-negro);
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+.card-header.bg-dark {
+    background: var(--gradient-dark) !important;
+    background-size: 200% 200%;
+    color: var(--hayuelos-blanco);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Cards de dashboard con bordes laterales vibrantes */
+.card.border-left-primary {
+    border-left: 8px solid var(--hayuelos-rojo) !important;
+    box-shadow: -5px 0 20px rgba(225, 0, 0, 0.3);
+}
+
+.card.border-left-success {
+    border-left: 8px solid var(--hayuelos-verde) !important;
+    box-shadow: -5px 0 20px rgba(0, 225, 0, 0.3);
+}
+
+.card.border-left-info {
+    border-left: 8px solid var(--hayuelos-azul) !important;
+    box-shadow: -5px 0 20px rgba(0, 225, 225, 0.3);
+}
+
+.card.border-left-warning {
+    border-left: 8px solid var(--hayuelos-verde) !important;
+    box-shadow: -5px 0 20px rgba(0, 225, 0, 0.3);
+}
+
+/* ========================================
+   PROGRESS BARS CON DEGRADADOS ANIMADOS
+   ======================================== */
+.progress {
+    border-radius: 25px;
+    background-color: #e9ecef;
+    border: 2px solid var(--hayuelos-azul);
+    height: 32px;
+    box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+.progress-bar {
+    border-radius: 23px;
+    background: var(--gradient-hero);
+    background-size: 200% 100%;
+    animation: progressFlow 3s linear infinite;
+    box-shadow: 0 3px 15px rgba(0, 225, 225, 0.5);
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    font-weight: 700;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.4), 
+        transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes progressFlow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+}
+
+.progress-bar.bg-info {
+    background: var(--gradient-secondary) !important;
+    background-size: 200% 100%;
+    animation: progressFlow 3s linear infinite;
+}
+
+.progress-bar.bg-success {
+    background: var(--gradient-success) !important;
+    background-size: 200% 100%;
+    animation: progressFlow 3s linear infinite;
+}
+
+.progress-bar.bg-danger {
+    background: var(--gradient-primary) !important;
+    background-size: 200% 100%;
+    animation: progressFlow 3s linear infinite;
+}
+
+/* ========================================
+   TABLES CON ESTILO MODERNO
+   ======================================== */
+.table {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+}
+
+.table thead {
+    background: var(--gradient-dark);
+    background-size: 200% 200%;
+    animation: gradientShift 8s ease infinite;
+    color: var(--hayuelos-blanco);
+}
+
+.table thead th {
+    border: none;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    padding: 1rem;
+}
+
+.table-dark {
+    background: var(--gradient-dark);
+    color: var(--hayuelos-blanco);
+}
+
+.table-bordered {
+    border: 3px solid var(--hayuelos-azul);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background: linear-gradient(90deg, 
+        rgba(0, 225, 225, 0.05) 0%, 
+        rgba(225, 0, 0, 0.05) 100%);
+}
+
+.table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.table tbody tr:hover {
+    background: linear-gradient(90deg, 
+        rgba(0, 225, 225, 0.15) 0%, 
+        rgba(225, 0, 0, 0.15) 100%) !important;
+    transform: scale(1.01);
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+}
+
+.table-hover tbody tr:hover {
+    cursor: pointer;
+}
+
+/* ========================================
+   ALERTS CON DEGRADADOS
+   ======================================== */
+.alert {
+    border-radius: 15px;
+    border: none;
+    border-left: 6px solid;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    font-weight: 500;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, 
+        rgba(0, 225, 0, 0.15) 0%, 
+        rgba(0, 225, 0, 0.05) 100%);
+    border-left-color: var(--hayuelos-verde);
+    color: #006400;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, 
+        rgba(225, 0, 0, 0.15) 0%, 
+        rgba(225, 0, 0, 0.05) 100%);
+    border-left-color: var(--hayuelos-rojo);
+    color: #8B0000;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, 
+        rgba(0, 225, 225, 0.15) 0%, 
+        rgba(0, 225, 225, 0.05) 100%);
+    border-left-color: var(--hayuelos-azul);
+    color: #006B6B;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, 
+        rgba(255, 165, 0, 0.15) 0%, 
+        rgba(255, 165, 0, 0.05) 100%);
+    border-left-color: #FFA500;
+    color: #8B4500;
+}
+
+/* ========================================
+   BADGES CON DEGRADADOS
+   ======================================== */
+.badge {
+    border-radius: 20px;
+    padding: 0.5em 1em;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.badge.bg-primary {
+    background: var(--gradient-primary) !important;
+    background-size: 200% 200%;
+    animation: gradientShift 4s ease infinite;
+    color: var(--hayuelos-blanco) !important;
+}
+
+.badge.bg-success {
+    background: var(--gradient-success) !important;
+    background-size: 200% 200%;
+    animation: gradientShift 4s ease infinite;
+    color: var(--hayuelos-negro) !important;
+}
+
+.badge.bg-info {
+    background: var(--gradient-secondary) !important;
+    background-size: 200% 200%;
+    animation: gradientShift 4s ease infinite;
+    color: var(--hayuelos-negro) !important;
+}
+
+.badge.bg-secondary {
+    background: var(--gradient-dark) !important;
+    color: var(--hayuelos-blanco) !important;
+}
+
+.badge.bg-danger {
+    background: var(--gradient-primary) !important;
+    background-size: 200% 200%;
+    animation: gradientShift 4s ease infinite;
+    color: var(--hayuelos-blanco) !important;
+}
+
+.badge.bg-warning {
+    background: linear-gradient(135deg, #FFA500 0%, #FFB733 50%, #FFA500 100%) !important;
+    background-size: 200% 200%;
+    animation: gradientShift 4s ease infinite;
+    color: var(--hayuelos-negro) !important;
+}
+
+/* ========================================
+   FORMULARIOS CON ESTILO MODERNO
+   ======================================== */
+.form-control, .form-select {
+    border-radius: 15px;
+    border: 3px solid var(--hayuelos-azul);
+    padding: 14px 22px;
+    transition: all 0.3s ease;
+    background: var(--hayuelos-blanco);
+    font-weight: 500;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--hayuelos-rojo);
+    box-shadow: 0 0 0 0.3rem rgba(225, 0, 0, 0.2);
+    transform: translateY(-3px);
+    background: #ffffff;
+}
+
+.form-label {
+    font-weight: 700;
+    color: var(--hayuelos-negro);
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+}
+
+/* ========================================
+   FOOTER CON DEGRADADO
+   ======================================== */
+footer {
+    background: var(--gradient-dark) !important;
+    background-size: 200% 200%;
+    animation: gradientShift 10s ease infinite;
+    color: var(--hayuelos-blanco) !important;
+    padding: 2rem 0;
+    border-top: 5px solid transparent;
+    border-image: var(--gradient-hero);
+    border-image-slice: 1;
+    box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* ========================================
+   LOGIN Y REGISTER - DEGRADADO VIBRANTE SOLO ROJO
+   ======================================== */
+body.auth-page {
+    background: linear-gradient(135deg, 
+        #E10000 0%, 
+        #FF1a1a 15%,
+        #E10000 30%,
+        #FF0000 45%,
+        #E10000 60%,
+        #D90000 75%,
+        #E10000 90%,
+        #FF2020 100%) !important;
+    background-size: 400% 400%;
+    animation: gradientMegaShift 15s ease infinite;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+body.auth-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(255, 50, 50, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(200, 0, 0, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(255, 20, 20, 0.15) 0%, transparent 60%);
+    animation: pulseBackground 8s ease-in-out infinite;
+}
+
+body.auth-page::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg,
+        transparent 40%,
+        rgba(255, 100, 100, 0.08) 50%,
+        transparent 60%);
+    animation: rotateShine 12s linear infinite;
+}
+
+@keyframes gradientMegaShift {
+    0% { background-position: 0% 50%; }
+    25% { background-position: 50% 80%; }
+    50% { background-position: 100% 50%; }
+    75% { background-position: 50% 20%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes pulseBackground {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.85; transform: scale(1.03); }
+}
+
+@keyframes rotateShine {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.auth-page .card {
+    background: var(--hayuelos-blanco);
+    border: none;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.5);
+    position: relative;
+    z-index: 1;
+    transform-style: preserve-3d;
+    transition: all 0.4s ease;
+}
+
+.auth-page .card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 35px 90px rgba(0, 0, 0, 0.6);
+}
+
+.auth-page .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: linear-gradient(90deg, 
+        #E10000 0%, 
+        #FF2020 25%, 
+        #E10000 50%, 
+        #FF2020 75%, 
+        #E10000 100%);
+    background-size: 200% 100%;
+    animation: borderFlow 5s linear infinite;
+    border-radius: 20px 20px 0 0;
+}
+
+.auth-page .form-label {
+    color: var(--hayuelos-negro);
+    font-weight: 700;
+}
+
+.auth-page a {
+    color: var(--hayuelos-rojo);
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.auth-page a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #E10000, #FF2020, #E10000);
+    transition: width 0.3s ease;
+}
+
+.auth-page a:hover::after {
+    width: 100%;
+}
+
+.auth-page a:hover {
+    color: #FF3333;
+    text-shadow: 0 0 15px rgba(225, 0, 0, 0.6);
+}
+
+/* ========================================
+   ICONOS Y COLORES DE TEXTO
+   ======================================== */
+.text-primary {
+    color: var(--hayuelos-rojo) !important;
+}
+
+.text-success {
+    color: var(--hayuelos-verde) !important;
+}
+
+.text-info {
+    color: var(--hayuelos-azul) !important;
+}
+
+/* ========================================
+   ESTADOS DE TANQUES CON ANIMACIONES
+   ======================================== */
+.estado-excelente {
+    color: var(--hayuelos-verde) !important;
+    animation: pulseGreen 3s ease-in-out infinite;
+}
+
+.estado-bueno {
+    color: var(--hayuelos-azul) !important;
+}
+
+.estado-bajo {
+    color: #FFA500 !important;
+    animation: pulseWarning 2s ease-in-out infinite;
+}
+
+.estado-critico {
+    color: var(--hayuelos-rojo) !important;
+    animation: pulseDanger 1s ease-in-out infinite;
+}
+
+@keyframes pulseGreen {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+@keyframes pulseWarning {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.08); }
+}
+
+@keyframes pulseDanger {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.15); }
+}
+
+/* ========================================
+   SOMBRAS CORPORATIVAS
+   ======================================== */
+.shadow-primary {
+    box-shadow: 0 10px 35px rgba(225, 0, 0, 0.4) !important;
+}
+
+.shadow-success {
+    box-shadow: 0 10px 35px rgba(0, 225, 0, 0.4) !important;
+}
+
+.shadow-info {
+    box-shadow: 0 10px 35px rgba(0, 225, 225, 0.4) !important;
+}
+
+/* ========================================
+   EFECTOS HOVER PARA ELEMENTOS INTERACTIVOS
+   ======================================== */
+.clickable {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.clickable:hover {
+    transform: scale(1.03);
+}
+
+/* ========================================
+   ANIMACIONES DE ENTRADA
+   ======================================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.8s ease-out;
+}
+
+/* ========================================
+   ESTILOS ESPECÃFICOS DEL DASHBOARD
+   ======================================== */
+.text-xs {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.font-weight-bold {
+    font-weight: 700 !important;
+}
+
+.text-gray-800 {
+    color: #2d3436 !important;
+}
+
+.text-gray-300 {
+    color: #b2bec3 !important;
+}
+
+/* ========================================
+   PERSONALIZACIÃ“N POR ROL - CARDS ESTADÃSTICAS
+   ======================================== */
+
+/* Admin - Cards con acento rojo */
+body.role-admin .card.border-left-primary {
+    border-left-color: var(--hayuelos-rojo) !important;
+    box-shadow: -8px 0 25px rgba(225, 0, 0, 0.3);
+}
+
+body.role-admin .text-primary {
+    color: var(--hayuelos-rojo) !important;
+}
+
+/* Encargado - Cards con acento azul */
+body.role-encargado .card.border-left-primary {
+    border-left-color: var(--hayuelos-azul) !important;
+    box-shadow: -8px 0 25px rgba(0, 225, 225, 0.3);
+}
+
+body.role-encargado .text-primary {
+    color: var(--hayuelos-azul) !important;
+}
+
+body.role-encargado .card-header {
+    background: var(--gradient-secondary) !important;
+    color: var(--hayuelos-negro) !important;
+}
+
+/* Islero - Cards con acento verde */
+body.role-islero .card.border-left-primary {
+    border-left-color: var(--hayuelos-verde) !important;
+    box-shadow: -8px 0 25px rgba(0, 225, 0, 0.3);
+}
+
+body.role-islero .text-primary {
+    color: var(--hayuelos-verde) !important;
+}
+
+body.role-islero .card-header {
+    background: var(--gradient-success) !important;
+    color: var(--hayuelos-negro) !important;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+@media (max-width: 768px) {
+    .btn {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+    
+    .card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+    
+    .table {
+        font-size: 0.85rem;
+    }
+    
+    h1, .h3 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .card.border-left-primary,
+    .card.border-left-success,
+    .card.border-left-info,
+    .card.border-left-warning {
+        border-left-width: 5px;
+    }
+    
+    .progress {
+        height: 25px;
+    }
+}
+
+/* ========================================
+   UTILIDADES ADICIONALES
+   ======================================== */
+.no-gutters {
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.no-gutters > .col,
+.no-gutters > [class*="col-"] {
+    padding-right: 0;
+    padding-left: 0;
+}
+
+/* Mejoras visuales para iconos */
+.bi {
+    vertical-align: middle;
+}
+
+.bi.fa-2x {
+    font-size: 2rem;
+}
+
+/* Espaciado consistente */
+.py-2 {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+
+.py-3 {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+}
+
+.mb-1 {
+    margin-bottom: 0.25rem !important;
+}
+
+.mb-3 {
+    margin-bottom: 1rem !important;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem !important;
+}
+
+.mt-3 {
+    margin-top: 1rem !important;
+}
+
+.mt-4 {
+    margin-top: 1.5rem !important;
+}
+
+.mt-5 {
+    margin-top: 3rem !important;
+}
+
+/* ========================================
+   FIN DEL ARCHIVO
+   ======================================== */

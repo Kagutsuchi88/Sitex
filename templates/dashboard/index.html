@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Hayuelos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </h1>
+                <div class="text-muted">
+                    <i class="bi bi-calendar"></i> Hoy
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Tanques
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_tanques }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Capacidad Total
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ "%.0f"|format(total_capacity) }} gal</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-fuel-pump fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Descargues Hoy
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ descargues_hoy|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-truck fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Mediciones Recientes
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ mediciones_recientes|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-clipboard-data fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- BOTONES DE ACCIÓN RÁPIDA PARA ADMIN Y ENCARGADO -->
+        {% if current_user.rol in ['admin', 'encargado'] %}
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body text-center">
+                    <i class="bi bi-upload fs-1 text-success"></i>
+                    <h6 class="mt-2 text-uppercase font-weight-bold">Carga Masiva</h6>
+                    <a href="{{ url_for('admin.carga_masiva') }}" class="btn btn-sm btn-success mt-2">
+                        <i class="bi bi-arrow-up-circle"></i> Ir
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+
+        <!-- NUEVO: Botón de Exportar Datos (admin y encargado) -->
+        {% if current_user.rol in ['admin', 'encargado'] %}
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body text-center">
+                    <i class="bi bi-file-earmark-arrow-down fs-1 text-info"></i>
+                    <h6 class="mt-2 text-uppercase font-weight-bold">Exportar Datos</h6>
+                    <p class="text-muted small mb-2">Excel / CSV</p>
+                    <a href="{{ url_for('admin.export_menu') }}" class="btn btn-sm btn-info mt-2">
+                        <i class="bi bi-download"></i> Ir
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    
+
+    <!-- Tanques Overview -->
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-circle"></i> Estado de Tanques
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if tanques %}
+                        {% for tanque in tanques %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="font-weight-bold">
+                                    Tanque {{ tanque.idTanques }} - {{ tanque.tipo_combustible }}
+                                </span>
+                                <span class="badge bg-primary">{{ "%.0f"|format(tanque.capacidad_gal) }} gal</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-info" role="progressbar" 
+                                     style="width: {{ ((tanque.contenido or 0) / tanque.capacidad_gal * 100) if tanque.capacidad_gal > 0 else 0 }}%">
+                                    {{ "%.0f"|format(tanque.contenido or 0) }} gal
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No hay tanques registrados.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-pie-chart"></i> Distribución por Tipo
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% for tipo, data in tanques_por_tipo.items() %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>{{ tipo }}</span>
+                            <span class="badge bg-secondary">{{ data.count }} tanque(s)</span>
+                        </div>
+                        <small class="text-muted">Capacidad: {{ "%.0f"|format(data.capacity) }} gal</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="bi bi-lightning"></i> Acciones Rápidas
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="d-grid gap-2">
+            <!-- ENCARGADO PUEDE REGISTRAR MEDICIONES (como Islero) -->
+            {% if current_user.rol in ['islero', 'encargado'] %}
+                <a href="{{ url_for('medicion.registro') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Nueva Medición
+                </a>
+                <a href="{{ url_for('medicion.descargue') }}" class="btn btn-success">
+                    <i class="bi bi-truck"></i> Registrar Descargue
+                </a>
+            {% endif %}
+            
+            <a href="{{ url_for('dashboard.tanques') }}" class="btn btn-info">
+                <i class="bi bi-circle"></i> Ver Tanques
+            </a>
+            
+            <!-- ENCARGADO VE OPCIONES DE ADMIN -->
+            {% if current_user.rol in ['admin', 'encargado'] %}
+                <a href="{{ url_for('dashboard.empleados') }}" class="btn btn-secondary">
+                    <i class="bi bi-people"></i> Empleados
+                </a>
+                <a href="{{ url_for('admin.export_menu') }}" class="btn btn-outline-info">
+                    <i class="bi bi-download"></i> Exportar Datos
+                </a>
+                <a href="{{ url_for('admin.carga_masiva') }}" class="btn btn-outline-success">
+                    <i class="bi bi-upload"></i> Carga Masiva
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+        </div>
+    </div>
+
+    <!-- Recent Measurements -->
+    {% if mediciones_recientes %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-clock-history"></i> Mediciones Recientes
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tanque</th>
+                                    <th>Galones</th>
+                                    <th>Empleado</th>
+                                    <th>Tipo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for medicion in mediciones_recientes %}
+                                <tr>
+                                    <td>{{ medicion.fecha_hora_registro.strftime('%d/%m/%Y %H:%M') if medicion.fecha_hora_registro else 'N/A' }}</td>
+                                    <td>
+                                        {% if medicion.tanque %}
+                                            Tanque {{ medicion.tanque.idTanques }} - {{ medicion.tanque.tipo_combustible }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ medicion.galones or 0 }} gal</td>
+                                    <td>{{ medicion.empleado.nombre_empleado if medicion.empleado else 'N/A' }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ medicion.tipo_medida or 'rutinario' }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center">
+                        <a href="{{ url_for('medicion.historial') }}" class="btn btn-outline-primary">
+                            Ver Historial Completo
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+.text-xs {
+    font-size: 0.7rem;
+}
+</style>
+{% endblock %}

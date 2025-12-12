@@ -1,0 +1,93 @@
+<!-- templates/medicion/registro.html - MEJORADO CON CONVERSIÓN -->
+{% extends "base.html" %}
+
+{% block title %}Registrar Medición - Hayuelos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-clipboard-data"></i> Registrar Medición
+        </h1>
+        <a href="{{ url_for('medicion.historial') }}" class="btn btn-outline-primary">
+            <i class="bi bi-clock-history"></i> Ver Historial
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="post">
+                {{ form.hidden_tag() }}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.tanque.label(class="form-label") }}
+                            {{ form.tanque(class="form-select") }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.tipo_medida.label(class="form-label") }}
+                            {{ form.tipo_medida(class="form-select") }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.medida_combustible.label(class="form-label") }}
+                            {{ form.medida_combustible(class="form-control", 
+   id="medida_combustible", 
+   oninput="this.value = this.value.replace(/[^0-9.]/g, '')",
+   pattern="[0-9]*[.]?[0-9]*",
+   inputmode="decimal") }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.galones.label(class="form-label") }}
+                            {{ form.galones(class="form-control", id="galones", readonly=true) }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.novedad.label(class="form-label") }}
+                    {{ form.novedad(class="form-control", rows="3") }}
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Guardar Medición
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Script para conversión automática cm → galones -->
+<script>
+  // Radio del tanque en cm (ajusta según dimensiones reales)
+  const r_cm = 50;
+  // Constante: galones por cada cm de altura
+  const FACTOR = Math.PI * r_cm * r_cm / 3785.411784;
+
+  function cmToGallons(h_cm) {
+    const h = parseFloat(h_cm);
+    if (isNaN(h) || h < 0) return 0;
+    return FACTOR * h;
+  }
+
+  function actualizarGalones() {
+    const medida_cm = parseFloat(document.getElementById('medida_combustible').value) || 0;
+    const galones = cmToGallons(medida_cm);
+    document.getElementById('galones').value = galones.toFixed(2);
+  }
+
+  document.getElementById('medida_combustible').addEventListener('input', actualizarGalones);
+</script>
+{% endblock %}

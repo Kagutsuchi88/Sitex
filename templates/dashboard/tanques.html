@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Tanques - Hayuelos{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-circle"></i> Gestión de Tanques
+        </h1>
+        
+        <!-- Solo Admin y Encargado pueden crear tanques -->
+        {% if current_user.rol in ['admin', 'encargado'] %}
+        <a href="{{ url_for('admin.crear_tanque') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo Tanque
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Estadísticas rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                        Total Tanques
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        {{ tanques|length }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                        Tanques Activos
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        {{ tanques|selectattr('activo')|list|length }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                        Capacidad Total
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        {{ "%.0f"|format(tanques|sum(attribute='capacidad')) }} gal
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                        Contenido Actual
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        {{ "%.0f"|format(tanques|sum(attribute='contenido')) }} gal
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NUEVO: Leyenda de estados -->
+    <div class="alert alert-info mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <div>
+                <i class="bi bi-info-circle"></i> <strong>Leyenda:</strong>
+            </div>
+            <div>
+                <span class="badge bg-success">Activo</span> = Tanque en operación
+            </div>
+            <div>
+                <span class="badge bg-secondary">Inactivo</span> = Tanque deshabilitado (solo se puede reactivar)
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid de Tanques -->
+    <div class="row">
+        {% for tanque in tanques %}
+        <div class="col-xl-4 col-md-6 mb-4">
+            <!-- CAMBIO: Aplicar opacidad si está inactivo -->
+            <div class="card shadow h-100 {% if not tanque.activo %}border-secondary{% endif %}" 
+                 style="{% if not tanque.activo %}opacity: 0.6; filter: grayscale(50%);{% endif %}">
+                
+                <div class="card-header {% if tanque.activo %}bg-primary{% else %}bg-secondary{% endif %} text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold">
+                            <i class="bi bi-circle-fill"></i> Tanque {{ tanque.idTanques }}
+                            {% if not tanque.activo %}
+                                <span class="badge bg-dark ms-2">
+                                    <i class="bi bi-x-circle"></i> DESHABILITADO
+                                </span>
+                            {% endif %}
+                        </h6>
+                        
+                        <!-- Botones de acción (Admin y Encargado) -->
+                        {% if current_user.rol in ['admin', 'encargado'] %}
+                        <div class="btn-group btn-group-sm" role="group">
+                            
+                            <!-- CAMBIO: Solo mostrar EDITAR si está activo -->
+                            {% if tanque.activo %}
+                            <a href="{{ url_for('admin.editar_tanque', tanque_id=tanque.id_tanques) }}" 
+                               class="btn btn-light btn-sm" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                            
+                            <!-- Botón de Activar/Desactivar -->
+                            <form method="POST" action="{{ url_for('admin.toggle_tanque', tanque_id=tanque.id_tanques) }}" 
+                                  style="display: inline;"
+                                  onsubmit="return confirm('¿Está seguro de {% if tanque.activo %}desactivar{% else %}reactivar{% endif %} este tanque?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" 
+                                        class="btn btn-sm {% if tanque.activo %}btn-warning{% else %}btn-success{% endif %}"
+                                        title="{% if tanque.activo %}Desactivar{% else %}Reactivar{% endif %}">
+                                    <i class="bi {% if tanque.activo %}bi-toggle-off{% else %}bi-toggle-on{% endif %}"></i>
+                                    {% if not tanque.activo %}Reactivar{% endif %}
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <h5 class="card-title text-center mb-3">
+                        <i class="bi bi-droplet-fill {% if tanque.activo %}text-primary{% else %}text-secondary{% endif %}"></i> 
+                        {{ tanque.tipo_combustible }}
+                    </h5>
+                    
+                    <!-- Información del tanque -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <small class="text-muted">Capacidad:</small>
+                            <strong>{{ "%.0f"|format(tanque.capacidad_gal) }} gal</strong>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <small class="text-muted">Altura Máxima:</small>
+                            <strong>{{ "%.2f"|format(tanque.altura_maxima_cm or 0) }} cm</strong>
+                        </div>
+                        
+                        {% if tanque.activo %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <small class="text-muted">Altura Actual:</small>
+                            <strong>{{ "%.2f"|format(tanque.altura_actual_cm or 0) }} cm</strong>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <small class="text-muted">Dimensiones:</small>
+                            <strong>Ø {{ "%.2f"|format(tanque.diametro_m or 0) }}m × {{ "%.2f"|format(tanque.altura_m or 0) }}m</strong>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Barra de nivel - SOLO SI ESTÁ ACTIVO -->
+                    {% if tanque.activo %}
+                    <div class="mb-2">
+                        <small class="text-muted">Nivel actual</small>
+                        <div class="progress" style="height: 25px;">
+                            {% set percentage = tanque.porcentaje_llenado %}
+                            <div class="progress-bar {% if percentage > 75 %}bg-success{% elif percentage > 50 %}bg-info{% elif percentage > 25 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                 role="progressbar" 
+                                 style="width: {{ percentage }}%">
+                                {{ "%.0f"|format(tanque.contenido or 0) }} gal ({{ "%.1f"|format(percentage) }}%)
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Mensaje para tanques inactivos -->
+                    <div class="alert alert-secondary text-center mb-2">
+                        <i class="bi bi-pause-circle"></i>
+                        <strong>Tanque Fuera de Servicio</strong>
+                        <p class="small mb-0 mt-2">Este tanque está deshabilitado y no registra mediciones</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer {% if not tanque.activo %}bg-secondary text-white{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small {% if not tanque.activo %}class="text-white"{% else %}class="text-muted"{% endif %}>
+                            Estado: 
+                            {% if tanque.activo %}
+                                {% set percentage = tanque.porcentaje_llenado %}
+                                {% if percentage > 75 %}
+                                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Excelente</span>
+                                {% elif percentage > 50 %}
+                                    <span class="badge bg-info"><i class="bi bi-info-circle"></i> Bueno</span>
+                                {% elif percentage > 25 %}
+                                    <span class="badge bg-warning"><i class="bi bi-exclamation-triangle"></i> Bajo</span>
+                                {% else %}
+                                    <span class="badge bg-danger"><i class="bi bi-exclamation-octagon"></i> Crítico</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-dark"><i class="bi bi-slash-circle"></i> INACTIVO</span>
+                            {% endif %}
+                        </small>
+                        
+                        <small {% if not tanque.activo %}class="text-white"{% else %}class="text-muted"{% endif %}>
+                            <i class="bi bi-calendar"></i> 
+                            {{ tanque.fecha_creacion.strftime('%d/%m/%Y') if tanque.fecha_creacion else 'N/A' }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not tanques %}
+    <div class="text-center py-5">
+        <i class="bi bi-circle display-1 text-muted"></i>
+        <h4 class="mt-3">No hay tanques registrados</h4>
+        <p class="text-muted">Comience creando su primer tanque de combustible.</p>
+        {% if current_user.rol in ['admin', 'encargado'] %}
+        <a href="{{ url_for('admin.crear_tanque') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Crear Primer Tanque
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_css %}
+<style>
+/* Efecto hover deshabilitado para tanques inactivos */
+.card[style*="opacity: 0.6"]:hover {
+    transform: none !important;
+}
+
+/* Animación sutil para tanques inactivos */
+@keyframes pulse-disabled {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 0.5; }
+}
+
+.card[style*="opacity: 0.6"] {
+    animation: pulse-disabled 3s ease-in-out infinite;
+}
+</style>
+{% endblock %}
+{% endblock %}

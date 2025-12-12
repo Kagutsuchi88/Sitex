@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Hayuelos Estación de Servicios{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% if current_user.is_authenticated %}role-{{ current_user.rol }}{% endif %}">
+    {% if current_user.is_authenticated %}
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('dashboard.index') }}">
+                <i class="bi bi-fuel-pump"></i> Hayuelos
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('dashboard.index') }}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('dashboard.tanques') }}">
+                <i class="bi bi-circle"></i> Tanques
+            </a>
+        </li>
+        <!-- Fragmento del navbar para insertar en base.html -->
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+        <i class="bi bi-clipboard-data"></i> Mediciones
+    </a>
+    <ul class="dropdown-menu">
+        <!-- ENCARGADO PUEDE REGISTRAR MEDICIONES (como Islero) -->
+        {% if current_user.rol in ['islero', 'encargado'] %}
+            <li><a class="dropdown-item" href="{{ url_for('medicion.registro') }}">
+                <i class="bi bi-plus-circle"></i> Registrar Medición
+            </a></li>
+            <li><a class="dropdown-item" href="{{ url_for('medicion.descargue') }}">
+                <i class="bi bi-truck"></i> Registrar Descargue
+            </a></li>
+            <!-- CARGUE DE EMERGENCIA -->
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{{ url_for('medicion.cargue_emergencia') }}">
+                <i class="bi bi-exclamation-triangle-fill"></i> Cargue de Emergencia
+            </a></li>
+            <li><hr class="dropdown-divider"></li>
+        {% endif %}
+        <li><a class="dropdown-item" href="{{ url_for('medicion.historial') }}">
+            <i class="bi bi-clock-history"></i> Historial Mediciones
+        </a></li>
+        <li><a class="dropdown-item" href="{{ url_for('medicion.historial_descargues') }}">
+            <i class="bi bi-truck"></i> Historial Descargues
+        </a></li>
+        {% if current_user.rol in ['islero', 'encargado'] %}
+            <li><a class="dropdown-item" href="{{ url_for('medicion.historial_cargues') }}">
+                <i class="bi bi-exclamation-triangle"></i> Historial Cargues Emergencia
+            </a></li>
+        {% endif %}
+    </ul>
+</li>
+        
+        <!-- ENCARGADO VE EMPLEADOS Y EXPORTAR (como Admin) -->
+        {% if current_user.rol in ['admin', 'encargado'] %}
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('dashboard.empleados') }}">
+                <i class="bi bi-people"></i> Empleados
+            </a>
+        </li>
+                        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('admin.export_menu') }}">
+                <i class="bi bi-file-earmark-arrow-down"></i> Exportar
+            </a>
+        </li>
+        <!-- NUEVO: Carga Masiva visible para Admin y Encargado -->
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('admin.carga_masiva') }}">
+                <i class="bi bi-upload"></i> Carga Masiva
+            </a>
+        </li>
+        {% endif %}
+        
+        <!-- NUEVO: Estadísticas visible para todos -->
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('dashboard.estadisticas') }}">
+                <i class="bi bi-graph-up-arrow"></i> Estadísticas
+            </a>
+        </li>
+    </ul>
+    
+    <ul class="navbar-nav">
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" style="gap: 10px;">
+                <div class="d-flex align-items-center" style="gap: 8px;">
+                    <div class="user-avatar" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #E10000 0%, #FF3030 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem; box-shadow: 0 4px 15px rgba(225, 0, 0, 0.4);">
+                        {{ current_user.nombre_empleado[0]|upper }}{{ current_user.apellido_empleado[0]|upper }}
+                    </div>
+                    <div class="d-none d-lg-block text-start">
+                        <div style="font-weight: 600; line-height: 1.2;">{{ current_user.nombre_empleado }} {{ current_user.apellido_empleado }}</div>
+                        <!-- Badge de rol con color mejorado -->
+                        {% if current_user.rol == 'admin' %}
+                            <span class="badge" style="background: linear-gradient(135deg, #E10000 0%, #FF3030 100%); font-size: 0.7rem; padding: 3px 8px;">
+                                <i class="bi bi-shield-lock"></i> Administrador
+                            </span>
+                        {% elif current_user.rol == 'encargado' %}
+                            <span class="badge" style="background: linear-gradient(135deg, #00E1E1 0%, #00C2C2 100%); font-size: 0.7rem; padding: 3px 8px; color: #000;">
+                                <i class="bi bi-person-gear"></i> Encargado
+                            </span>
+                        {% elif current_user.rol == 'islero' %}
+                            <span class="badge" style="background: linear-gradient(135deg, #00E100 0%, #00C200 100%); font-size: 0.7rem; padding: 3px 8px; color: #000;">
+                                <i class="bi bi-person-badge"></i> Islero
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" style="min-width: 280px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);">
+                <!-- Header del usuario -->
+                <li class="dropdown-header" style="background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%); color: white; padding: 15px; margin: -5px -5px 10px -5px; border-radius: 15px 15px 0 0;">
+                    <div class="d-flex align-items-center" style="gap: 12px;">
+                        <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #E10000 0%, #FF3030 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.5rem;">
+                            {{ current_user.nombre_empleado[0]|upper }}{{ current_user.apellido_empleado[0]|upper }}
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; font-size: 1.1rem;">{{ current_user.nombre_empleado }}</div>
+                            <small style="opacity: 0.8;">{{ current_user.email }}</small>
+                        </div>
+                    </div>
+                </li>
+                
+                <!-- Perfil -->
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('auth.change_password') }}" style="padding: 12px 20px;">
+                        <i class="bi bi-key text-warning"></i> Cambiar Contraseña
+                    </a>
+                </li>
+                
+                <li><hr class="dropdown-divider"></li>
+                
+                <!-- NUEVO: Documentación y Manuales -->
+                <li class="dropdown-header" style="font-weight: 700; color: #E10000;">
+                    <i class="bi bi-book"></i> Documentación
+                </li>
+                
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('main.manual_usuario') }}" style="padding: 10px 20px;">
+                        <i class="bi bi-file-earmark-text text-info"></i> Manual de Usuario
+                    </a>
+                </li>
+                
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('main.manual_tecnico') }}" style="padding: 10px 20px;">
+                        <i class="bi bi-file-earmark-code text-primary"></i> Manual Técnico
+                    </a>
+                </li>
+                
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('main.politicas') }}" style="padding: 10px 20px;">
+                        <i class="bi bi-shield-check text-success"></i> Políticas de la Empresa
+                    </a>
+                </li>
+                
+                <li><hr class="dropdown-divider"></li>
+                
+                <!-- Cerrar sesión -->
+                <li>
+                    <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}" style="padding: 12px 20px; font-weight: 600;">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                    </a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container-fluid mt-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="{% if current_user.is_authenticated %}container-fluid mt-4{% else %}{% endif %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    {% if current_user.is_authenticated %}
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <small>&copy; 2025 Hayuelos Estación de Servicios - "Y También vendemos combustible". Todos los derechos reservados.</small>
+        </div>
+    </footer>
+    {% endif %}
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js for dashboards -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

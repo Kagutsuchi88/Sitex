@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Descargue - Hayuelos{% endblock %}
+
+{% block extra_css %}
+<style>
+.accordion-button:not(.collapsed) {
+    background-color: var(--hayuelos-rojo);
+    color: white;
+}
+
+.toggle-switch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-switch .form-check-input {
+    width: 3em;
+    height: 1.5em;
+    cursor: pointer;
+}
+
+.form-switch .form-check-input:checked {
+    background-color: var(--hayuelos-verde);
+    border-color: var(--hayuelos-verde);
+}
+
+.form-switch .form-check-input:not(:checked) {
+    background-color: var(--hayuelos-rojo);
+    border-color: var(--hayuelos-rojo);
+}
+
+.required-badge {
+    background: var(--hayuelos-rojo);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.imagen-preview {
+    max-width: 200px;
+    max-height: 200px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-truck"></i> Registrar Descargue
+        </h1>
+        <a href="{{ url_for('medicion.historial_descargues') }}" class="btn btn-outline-success">
+            <i class="bi bi-clock-history"></i> Ver Historial
+        </a>
+    </div>
+
+    <!-- Alertas de validación -->
+    <div id="validationAlert" class="alert alert-danger d-none" role="alert">
+        <i class="bi bi-exclamation-triangle"></i>
+        <strong>Error:</strong> <span id="validationMessage"></span>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" id="descargueForm">
+                {{ form.hidden_tag() }}
+                
+                <!-- Información Básica -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-info-circle"></i> Información del Descargue
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                {{ form.tanque.label(class="form-label") }}
+                                <span class="required-badge">OBLIGATORIO</span>
+                                {{ form.tanque(class="form-control", id="tanque", required=True) }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                {{ form.fecha.label(class="form-label") }}
+                                {{ form.fecha(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                {{ form.imagen.label(class="form-label") }}
+                                {{ form.imagen(class="form-control", id="imagen", accept="image/*,.pdf") }}
+                                <small class="text-muted">Imágenes o PDF</small>
+                            </div>
+                            <img id="imagenPreview" class="imagen-preview d-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acordeón de Secciones -->
+                <div class="accordion" id="descargueAccordion">
+                    
+                    <!-- 1. SEGURIDAD DEL CONDUCTOR -->
+                    <div class="accordion-item mb-3">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#seguridadConductor">
+                                <i class="bi bi-person-check me-2"></i>
+                                <strong>1. Seguridad del Conductor</strong>
+                                <span class="required-badge ms-3">OBLIGATORIO</span>
+                            </button>
+                        </h2>
+                        <div id="seguridadConductor" class="accordion-collapse collapse show" data-bs-parent="#descargueAccordion">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-switch mb-3 toggle-switch">
+                                            <input class="form-check-input seguridad-required" type="checkbox" 
+                                                   id="botas" name="botas" value="si" required checked>
+                                            <label class="form-check-label" for="botas">
+                                                <i class="bi bi-boot"></i> Botas de Seguridad
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <div class="form-switch mb-3 toggle-switch">
+                                            <input class="form-check-input seguridad-required" type="checkbox" 
+                                                   id="gafas" name="gafas" value="si" required checked>
+                                            <label class="form-check-label" for="gafas">
+                                                <i class="bi bi-eye"></i> Gafas de Protección
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <div class="form-switch mb-3 toggle-switch">
+                                            <input class="form-check-input seguridad-required" type="checkbox" 
+                                                   id="tapaoidos" name="tapaoidos" value="si" required checked>
+                                            <label class="form-check-label" for="tapaoidos">
+                                                <i class="bi bi-earplugs"></i> Tapaoídos
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <div class="form-switch mb-3 toggle-switch">
+                                            <input class="form-check-input seguridad-required" type="checkbox" 
+                                                   id="guantes" name="guantes" value="si" required checked>
+                                            <label class="form-check-label" for="guantes">
+                                                <i class="bi bi-hand-index-thumb"></i> Guantes
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-warning mt-3">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <strong>IMPORTANTE:</strong> Todos los elementos de seguridad del conductor son obligatorios. 
+                                    Si alguno está desactivado (OFF), no se podrá registrar el descargue.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. SEGURIDAD DEL VEHÍCULO -->
+                    <div class="accordion-item mb-3">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#seguridadVehiculo">
+                                <i class="bi bi-truck me-2"></i>
+                                <strong>2. Seguridad del Vehículo</strong>
+                                <span class="required-badge ms-3">OBLIGATORIO</span>
+                            </button>
+                        </h2>
+                        <div id="seguridadVehiculo" class="accordion-collapse collapse" data-bs-parent="#descargueAccordion">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-switch mb-3 toggle-switch">
+                                            <input class="form-check-input seguridad-required" type="checkbox" 
+                                                   id="kit_derrames" name="kit_derrames" value="si" required checked>
+                                            <label class="form-check-label" for="kit_derrames">
+                                                <i class="bi bi-droplet-half"></i> Kit Derrames
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <div class="form-switch mb-3 toggle-switch">
+                                            <input class="form-check-input seguridad-required" type="checkbox" 
+                                                   id="extintores" name="extintores" value="si" required checked>
+                                            <label class="form-check-label" for="extintores">
+                                                <i class="bi bi-fire"></i> Extintores
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <div class="form-switch mb-3 toggle-switch">
+                                            <input class="form-check-input seguridad-required" type="checkbox" 
+                                                   id="conos" name="conos" value="si" required checked>
+                                            <label class="form-check-label" for="conos">
+                                                <i class="bi bi-cone-striped"></i> Conos
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <div class="form-switch mb-3 toggle-switch">
+                                            <input class="form-check-input seguridad-required" type="checkbox" 
+                                                   id="boquillas" name="boquillas" value="si" required checked>
+                                            <label class="form-check-label" for="boquillas">
+                                                <i class="bi bi-bullseye"></i> Boquillas
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-warning mt-3">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <strong>IMPORTANTE:</strong> Todos los elementos de seguridad del vehículo son obligatorios.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. MEDICIÓN DEL DESCARGUE -->
+                    <div class="accordion-item mb-3">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#medicionDescargue">
+                                <i class="bi bi-rulers me-2"></i>
+                                <strong>3. Medición del Descargue</strong>
+                            </button>
+                        </h2>
+                        <div id="medicionDescargue" class="accordion-collapse collapse" data-bs-parent="#descargueAccordion">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <!-- MEDIDA INICIAL -->
+<div class="col-md-4">
+    <div class="card bg-light mb-3">
+        <div class="card-header"><strong>Medida Inicial</strong></div>
+        <div class="card-body">
+            <div class="mb-2">
+                {{ form.medida_inicial_cm.label(class="form-label") }}
+                {{ form.medida_inicial_cm(class="form-control", id="medida_inicial_cm", placeholder="Ej: 123") }}
+            </div>
+            <div class="mb-2">
+                {{ form.medida_inicial_gl.label(class="form-label") }}
+                {{ form.medida_inicial_gl(class="form-control", id="medida_inicial_gl", readonly=True) }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DESCARGUE -->
+<div class="col-md-4">
+    <div class="card bg-light mb-3">
+        <div class="card-header"><strong>Descargue</strong></div>
+        <div class="card-body">
+            <div class="mb-2">
+                {{ form.descargue_cm.label(class="form-label") }}
+                {{ form.descargue_cm(class="form-control", id="descargue_cm", placeholder="Ej: 233") }}
+            </div>
+            <div class="mb-2">
+                {{ form.descargue_gl.label(class="form-label") }}
+                {{ form.descargue_gl(class="form-control", id="descargue_gl", readonly=True) }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MEDIDA FINAL -->
+<div class="col-md-4">
+    <div class="card bg-light mb-3">
+        <div class="card-header"><strong>Medida Final</strong></div>
+        <div class="card-body">
+            <div class="mb-2">
+                {{ form.medida_final_cm.label(class="form-label") }}
+                {{ form.medida_final_cm(class="form-control", id="medida_final_cm") }}  <!-- QUITAR readonly=True -->
+            </div>
+            <div class="mb-2">
+                {{ form.medida_final_gl.label(class="form-label") }}
+                {{ form.medida_final_gl(class="form-control", id="medida_final_gl", readonly=True) }}
+            </div>
+        </div>
+    </div>
+</div>
+<!-- DIFERENCIA FINAL (GALONES DESCARGADOS) -->
+<div class="row mt-4">
+    <div class="col-md-6 offset-md-3">
+        <div class="card border-success shadow-lg">
+            <div class="card-body text-center bg-light">
+                <h4 class="text-success mb-3">
+                    <i class="bi bi-arrow-down-up"></i> Diferencia (Galones Descargados)
+                </h4>
+                <div class="display-4 fw-bold text-success" id="diferencia_display">
+                    0.00
+                </div>
+                <small class="text-muted">Galones realmente descargados</small>
+                <!-- Campo oculto para enviar al backend -->
+                {{ form.diferencia(id="diferencia", type="hidden") }}
+            </div>
+        </div>
+    </div>
+</div>
+
+                                <!-- Calidad del Combustible -->
+                                <h6 class="mt-4 mb-3">Calidad del Combustible</h6>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            {{ form.brillante.label(class="form-label") }}
+                                            {{ form.brillante(class="form-select") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            {{ form.traslucido.label(class="form-label") }}
+                                            {{ form.traslucido(class="form-select") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            {{ form.claro.label(class="form-label") }}
+                                            {{ form.claro(class="form-select") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            {{ form.solidos.label(class="form-label") }}
+                                            {{ form.solidos(class="form-select") }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ form.separacion.label(class="form-label") }}
+                                    {{ form.separacion(class="form-control") }}
+                                </div>
+
+                                <!-- Observaciones -->
+                                <h6 class="mt-4 mb-3">Observaciones</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            {{ form.observaciones1.label(class="form-label") }}
+                                            {{ form.observaciones1(class="form-control", rows="3") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            {{ form.observaciones2.label(class="form-label") }}
+                                            {{ form.observaciones2(class="form-control", rows="3") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-success" id="submitBtn">
+                        <i class="bi bi-check-circle"></i> Registrar Descargue
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tanqueSelect = document.getElementById('tanque');
+    const inicialCm = document.getElementById('medida_inicial_cm');
+    const descargueCm = document.getElementById('descargue_cm');
+    const finalCm = document.getElementById('medida_final_cm');
+    const inicialGl = document.getElementById('medida_inicial_gl');
+    const descargueGl = document.getElementById('descargue_gl');
+    const finalGl = document.getElementById('medida_final_gl');
+    const diferenciaField = document.getElementById('diferencia');
+
+    function convertir(cm, campoGl) {
+        const valor = parseFloat(cm.replace(',', '.')) || 0;
+        const tanqueId = tanqueSelect.value;
+
+        if (!tanqueId || valor <= 0) {
+            campoGl.value = '';
+            return;
+        }
+
+        fetch(`/medicion/api/convert_cm_to_gallons/${tanqueId}?cm=${valor}`)
+            .then(r => r.json())
+            .then(data => {
+                campoGl.value = data.gallons.toFixed(2);
+                recalcularFinalYDiferencia();
+            })
+            .catch(err => {
+                console.error('Error conversión:', err);
+                campoGl.value = '';
+            });
+    }
+
+    function recalcularFinalYDiferencia() {
+    const inicialGl = parseFloat(document.getElementById('medida_inicial_gl').value) || 0;
+    const descargueGl = parseFloat(document.getElementById('descargue_gl').value) || 0;
+    const finalCalculadoGl = inicialGl + descargueGl;
+
+    // Llenar Medida Final (galones)
+    document.getElementById('medida_final_gl').value = finalCalculadoGl.toFixed(2);
+
+    // Calcular diferencia real (lo que se descargó)
+    const diferenciaReal = descargueGl.toFixed(2);
+
+    // Mostrar en grande
+    document.getElementById('diferencia_display').textContent = diferenciaReal;
+
+    // Guardar en el campo oculto para enviar al servidor
+    document.getElementById('diferencia').value = diferenciaReal;
+
+    // Opcional: calcular Medida Final en cm (más preciso con la API)
+    if (finalCalculadoGl > 0 && tanqueSelect.value) {
+        fetch(`/medicion/api/convert_cm_to_gallons/${tanqueSelect.value}?cm=1`)
+            .then(r => r.json())
+            .then(data => {
+                const cmPorGalon = 1 / data.gallons;
+                const finalCm = (finalCalculadoGl * cmPorGalon).toFixed(2);
+                document.getElementById('medida_final_cm').value = finalCm;
+            });
+    }
+}
+
+    // Escuchar cambios en los campos cm
+    inicialCm.addEventListener('input', () => convertir(inicialCm.value, inicialGl));
+    descargueCm.addEventListener('input', () => convertir(descargueCm.value, descargueGl));
+
+    // Al cambiar tanque, recalcular todo
+    tanqueSelect.addEventListener('change', function() {
+        if (inicialCm.value) convertir(inicialCm.value, inicialGl);
+        if (descargueCm.value) convertir(descargueCm.value, descargueGl);
+    });
+
+    // Inicializar si ya hay valores
+    if (inicialCm.value) convertir(inicialCm.value, inicialGl);
+    if (descargueCm.value) convertir(descargueCm.value, descargueGl);
+});
+</script>
+{% endblock %}

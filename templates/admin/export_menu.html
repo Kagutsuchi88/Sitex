@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Exportar Datos - Hayuelos{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-file-earmark-arrow-down"></i> Exportar Datos
+        </h1>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <!-- Información de usuario -->
+    <div class="alert alert-info mb-4">
+        <i class="bi bi-info-circle"></i>
+        <strong>Usuario:</strong> {{ current_user.nombre_empleado }} ({{ current_user.cargo_establecido|title }})
+        <br>
+        <small>Puede exportar datos en formato Excel (.xlsx) o CSV (.csv)</small>
+    </div>
+
+    <div class="row">
+        <!-- Exportar Empleados -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-people"></i> Empleados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Exportar listado completo de empleados con su información.</p>
+                    
+                    <div class="d-grid gap-2 mb-3">
+                        <a href="{{ url_for('admin.export_data', tipo='empleados', formato='excel') }}" 
+                           class="btn btn-success">
+                            <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                        </a>
+                        <a href="{{ url_for('admin.export_data', tipo='empleados', formato='csv') }}" 
+                           class="btn btn-outline-success">
+                            <i class="bi bi-filetype-csv"></i> Exportar CSV
+                        </a>
+                    </div>
+                    
+                    <hr>
+                    <small class="text-muted">
+                        <strong>Incluye:</strong> Usuario, nombre, documento, email, cargo, estado
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exportar Tanques -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-circle"></i> Tanques
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Exportar información de todos los tanques de combustible.</p>
+                    
+                    <div class="d-grid gap-2 mb-3">
+                        <a href="{{ url_for('admin.export_data', tipo='tanques', formato='excel') }}" 
+                           class="btn btn-success">
+                            <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                        </a>
+                        <a href="{{ url_for('admin.export_data', tipo='tanques', formato='csv') }}" 
+                           class="btn btn-outline-success">
+                            <i class="bi bi-filetype-csv"></i> Exportar CSV
+                        </a>
+                    </div>
+                    
+                    <hr>
+                    <small class="text-muted">
+                        <strong>Incluye:</strong> Tipo combustible, capacidad, contenido, estado
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exportar Mediciones -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clipboard-data"></i> Mediciones
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Exportar historial de mediciones de combustible.</p>
+                    
+                    <form id="formMediciones">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Desde</label>
+                                <input type="date" class="form-control" id="mediciones_fecha_desde" name="fecha_desde">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Hasta</label>
+                                <input type="date" class="form-control" id="mediciones_fecha_hasta" name="fecha_hasta">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Tanque (opcional)</label>
+                            <select class="form-select" id="mediciones_tanque" name="tanque_id">
+                                <option value="">Todos los tanques</option>
+                                {% for tanque in tanques %}
+                                    <option value="{{ tanque.id_tanques }}">
+                                        Tanque {{ tanque.id_tanques }} - {{ tanque.tipo_combustible }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-success" onclick="exportarMediciones('excel')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                            <button type="button" class="btn btn-outline-success" onclick="exportarMediciones('csv')">
+                                <i class="bi bi-filetype-csv"></i> Exportar CSV
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <hr>
+                    <small class="text-muted">
+                        <strong>Incluye:</strong> Fecha, tanque, medida, galones, empleado, novedades
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exportar Descargues -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-truck"></i> Descargues
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Exportar historial de descargues de combustible.</p>
+                    
+                    <form id="formDescargues">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Desde</label>
+                                <input type="date" class="form-control" id="descargues_fecha_desde" name="fecha_desde">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Hasta</label>
+                                <input type="date" class="form-control" id="descargues_fecha_hasta" name="fecha_hasta">
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-success" onclick="exportarDescargues('excel')">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </button>
+                            <button type="button" class="btn btn-outline-success" onclick="exportarDescargues('csv')">
+                                <i class="bi bi-filetype-csv"></i> Exportar CSV
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <hr>
+                    <small class="text-muted">
+                        <strong>Incluye:</strong> Fecha, tanque, medidas, diferencias, equipo seguridad
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información adicional -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <h5><i class="bi bi-info-circle"></i> Información sobre los formatos</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-success">Excel (.xlsx)</h6>
+                    <ul>
+                        <li>Formato más visual con estilos y colores</li>
+                        <li>Encabezados con fondo rojo corporativo</li>
+                        <li>Columnas autoajustadas</li>
+                        <li>Ideal para análisis y presentaciones</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-success">CSV (.csv)</h6>
+                    <ul>
+                        <li>Formato simple compatible con cualquier software</li>
+                        <li>Menor tamaño de archivo</li>
+                        <li>Fácil de importar en otras aplicaciones</li>
+                        <li>Ideal para procesamiento automatizado</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function exportarMediciones(formato) {
+    const fechaDesde = document.getElementById('mediciones_fecha_desde').value;
+    const fechaHasta = document.getElementById('mediciones_fecha_hasta').value;
+    const tanqueId = document.getElementById('mediciones_tanque').value;
+    
+    let url = `{{ url_for('admin.export_data', tipo='mediciones') }}?formato=${formato}`;
+    if (fechaDesde) url += `&fecha_desde=${fechaDesde}`;
+    if (fechaHasta) url += `&fecha_hasta=${fechaHasta}`;
+    if (tanqueId) url += `&tanque_id=${tanqueId}`;
+    
+    window.location.href = url;
+}
+
+function exportarDescargues(formato) {
+    const fechaDesde = document.getElementById('descargues_fecha_desde').value;
+    const fechaHasta = document.getElementById('descargues_fecha_hasta').value;
+    
+    let url = `{{ url_for('admin.export_data', tipo='descargues') }}?formato=${formato}`;
+    if (fechaDesde) url += `&fecha_desde=${fechaDesde}`;
+    if (fechaHasta) url += `&fecha_hasta=${fechaHasta}`;
+    
+    window.location.href = url;
+}
+
+// Establecer fecha de hoy por defecto
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('mediciones_fecha_hasta').value = today;
+    document.getElementById('descargues_fecha_hasta').value = today;
+    
+    // Fecha desde: hace 30 días
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const dateString = thirtyDaysAgo.toISOString().split('T')[0];
+    document.getElementById('mediciones_fecha_desde').value = dateString;
+    document.getElementById('descargues_fecha_desde').value = dateString;
+});
+</script>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Historial de Descargues - Hayuelos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-truck"></i> Historial de Descargues
+        </h1>
+        <a href="{{ url_for('medicion.descargue') }}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Nuevo Descargue
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            {% if descargues.items %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+            <th>Fecha</th>
+            <th>Tanque</th>
+            <th>Inicial (gl)</th>
+            <th>Descargue (gl)</th>
+            <th>Final (gl)</th>
+            <th>Diferencia</th>
+            <th>Empleado</th>
+            <th>Estado</th>
+            <th>Imagen</th>  <!-- Nueva columna -->
+        </tr>
+    </thead>
+    <tbody>
+        {% for descargue in descargues.items %}
+        <tr>
+            <td>{{ descargue.fecha.strftime('%d/%m/%Y') if descargue.fecha else 'N/A' }}</td>
+            <td>{{ descargue.tanque or 'N/A' }}</td>
+            <td>{{ "%.2f"|format(descargue.medida_inicial_gl) if descargue.medida_inicial_gl else '0.00' }}</td>
+            <td>{{ "%.2f"|format(descargue.descargue_gl) if descargue.descargue_gl else '0.00' }}</td>
+            <td>{{ "%.2f"|format(descargue.medida_final_gl) if descargue.medida_final_gl else '0.00' }}</td>
+            <td>
+                {% if descargue.diferencia %}
+                    {% if descargue.diferencia > 0 %}
+                        +{{ "%.2f"|format(descargue.diferencia) }}
+                    {% else %}
+                        {{ "%.2f"|format(descargue.diferencia) }}
+                    {% endif %}
+                {% else %}
+                    0.00
+                {% endif %}
+            </td>
+            <td>{{ descargue.empleado.nombre_empleado if descargue.empleado else 'N/A' }}</td>
+            <td>
+                {% if descargue.kit_derrames == 'si' and descargue.extintores == 'si' %}
+                    Completo
+                {% else %}
+                    Revisión
+                {% endif %}
+            </td>
+            <td>
+                {% if descargue.imagen_path %}
+                    <a href="{{ url_for('static', filename='uploads/' + descargue.imagen_path) }}" target="_blank">
+                        <img src="{{ url_for('static', filename='uploads/' + descargue.imagen_path) }}" alt="Imagen" style="width: 50px; height: auto;">
+                    </a>
+                {% else %}
+                    N/A
+                {% endif %}
+            </td>  <!-- Visualización de imagen -->
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+            </div>
+
+            <!-- Pagination -->
+            {% if descargues.pages > 1 %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if descargues.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('medicion.historial_descargues', page=descargues.prev_num) }}">Anterior</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for page_num in descargues.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != descargues.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('medicion.historial_descargues', page=page_num) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if descargues.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('medicion.historial_descargues', page=descargues.next_num) }}">Siguiente</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-truck display-1 text-muted"></i>
+                <h4 class="mt-3">No hay descargues registrados</h4>
+                <p class="text-muted">Comience registrando su primer descargue de combustible.</p>
+                <a href="{{ url_for('medicion.descargue') }}" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> Registrar Primer Descargue
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
