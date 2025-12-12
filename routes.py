@@ -185,19 +185,22 @@ def register():
             aceptado_terminos=form.aceptar_terminos.data
         )
         
-        # NUEVO: Generar token de confirmación
-        token = nuevo_empleado.generate_confirmation_token()
-        
+         # routes.py (dentro de register())
         db.session.add(nuevo_empleado)
-        db.session.commit()
-        
-        # NUEVO: Enviar email de confirmación
+        db.session.commit()  # ahora tiene id
+
+        # Generar token y guardarlo en DB
+        token = nuevo_empleado.generate_confirmation_token()
+        db.session.commit()  # persiste token_confirmacion + expiry
+
         try:
             enviar_email_confirmacion(nuevo_empleado, token)
             flash(f"¡Registro exitoso! Se ha enviado un email de confirmación a {nuevo_empleado.email}.", "success")
         except Exception as e:
-            flash(f"Usuario creado, pero hubo un error al enviar el email. Contacte al administrador.", "warning")
-            print(f"Error enviando email: {e}")
+            import traceback
+            print("Error enviando email:", e)
+            traceback.print_exc()
+            flash("Usuario creado, pero hubo un error al enviar el email. Contacte al administrador.", "warning")
         
         registrar_auditoria('CREATE', 'empleado', nuevo_empleado.id_empleados, None, {
             'usuario': nuevo_empleado.usuario,
