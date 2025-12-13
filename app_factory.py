@@ -119,10 +119,12 @@ def create_app():
     if not database_url:
         # Fallback para desarrollo local
         database_url = 'mysql+pymysql://root:@localhost/sitex_prueba'
-    else:
+    elif database_url.startswith("postgres://"):
+        # Convert postgres:// to postgresql:// for SQLAlchemy compatibility
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    elif database_url.startswith("mysql://"):
         # Convertir mysql:// a mysql+pymysql:// si es necesario
-        if database_url.startswith("mysql://"):
-            database_url = database_url.replace("mysql://", "mysql+pymysql://", 1)
+        database_url = database_url.replace("mysql://", "mysql+pymysql://", 1)
     
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
