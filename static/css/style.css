@@ -4,11 +4,10 @@
 body.auth-page {
     background: #FF4444 !important;
     min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
     position: relative;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* Blob blanco grande superior derecha */
@@ -778,11 +777,10 @@ body.auth-page {
     background-size: 400% 400%;
     animation: gradientMegaShift 15s ease infinite;
     min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
     position: relative;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 body.auth-page::before {
