@@ -5,6 +5,7 @@ import secrets
 from extensions import db
 from itsdangerous import URLSafeTimedSerializer
 from flask import current_app
+import bcrypt
 
 class Empleado(db.Model, UserMixin):
     __tablename__ = 'empleado'
@@ -108,7 +109,24 @@ class Empleado(db.Model, UserMixin):
         if self.reset_token == token and self.reset_token_expiry > datetime.utcnow():
             return True
         return False
+    
+    def set_password(self, raw_password: str):
+        self.contrasena = bcrypt.hashpw(
+            raw_password.encode("utf-8"),
+            bcrypt.gensalt()
+        ).decode("utf-8")
 
+    def check_password(self, raw_password: str) -> bool:
+        if not self.contrasena:
+            return False
+        try:
+            return bcrypt.checkpw(
+                raw_password.encode("utf-8"),
+                self.contrasena.encode("utf-8")
+            )
+        except ValueError:
+            # hash corrupto o heredado
+            return False
 
 class SesionActiva(db.Model):
     """Tabla para rastrear sesiones activas"""

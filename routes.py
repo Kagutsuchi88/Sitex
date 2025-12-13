@@ -5,7 +5,6 @@ from flask_mail import Message
 from werkzeug.utils import secure_filename
 from datetime import date, datetime, timedelta
 from sqlalchemy import func, extract
-import bcrypt
 import os
 import secrets
 import pandas as pd
@@ -166,7 +165,6 @@ def register():
         # Crear contraseña temporal
         num_doc = form.numero_documento.data
         contrasena_temporal = num_doc[-4:] if len(num_doc) >= 4 else num_doc
-        hash_cifrado = bcrypt.hashpw(contrasena_temporal.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
         nuevo_empleado = Empleado(
             usuario=form.usuario.data,
@@ -178,12 +176,14 @@ def register():
             telefono=form.telefono.data,
             direccion=form.direccion.data,
             cargo_establecido=form.cargo_establecido.data,
-            contrasena=hash_cifrado,
             temporal=True,
             activo=True,
-            email_confirmado=False,  # NO confirmado inicialmente
+            email_confirmado=False,
             aceptado_terminos=form.aceptar_terminos.data
         )
+
+        nuevo_empleado.set_password(contrasena_temporal)
+
         
         # 1) Guardar usuario primero para que exista en la BD
         db.session.add(nuevo_empleado)
@@ -291,8 +291,7 @@ def change_password():
     form = ChangePasswordForm()
     if form.validate_on_submit():
         if current_user.check_password(form.current_password.data):
-            hash_nuevo = bcrypt.hashpw(form.new_password.data.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-            current_user.contrasena = hash_nuevo
+            current_user.set_password(form.new_password.data)
             current_user.temporal = False
             db.session.commit()
             
@@ -382,8 +381,7 @@ def reset_password(token):
     form = PasswordResetForm()  # 👈 El formulario debe estar aquí
     
     if form.validate_on_submit():
-        hash_nuevo = bcrypt.hashpw(form.password.data.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-        empleado.contrasena = hash_nuevo
+        empleado.set_password(form.password.data)
         empleado.reset_token = None
         empleado.reset_token_expiry = None
         empleado.temporal = False
@@ -405,9 +403,10 @@ def reset_password_admin(empleado_id):
     empleado = Empleado.query.get_or_404(empleado_id)
     
     contrasena_temporal = empleado.numero_documento[-4:] if len(empleado.numero_documento) >= 4 else empleado.numero_documento
-    hash_cifrado = bcrypt.hashpw(contrasena_temporal.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-    
-    empleado.contrasena = hash_cifrado
+    empleado.set_password(contrasena_temporal)
+    empleado.temporal = True
+    db.session.commit()
+
     empleado.temporal = True
     db.session.commit()
     
@@ -423,9 +422,7 @@ def resetear_clave_empleado(empleado_id):
     empleado = Empleado.query.get_or_404(empleado_id)
     
     temp_password = empleado.numero_documento[-4:] if len(empleado.numero_documento) >= 4 else empleado.numero_documento
-    hashed = bcrypt.hashpw(temp_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    
-    empleado.contrasena = hashed
+    empleado.set_password(temp_password)
     empleado.temporal = True
     db.session.commit()
     
@@ -993,8 +990,6 @@ def carga_masiva():
                         continue
                     
                     temp_pass = str(row['numero_documento'])[-4:]
-                    hash_pwd = bcrypt.hashpw(temp_pass.encode(), bcrypt.gensalt()).decode()
-                    
                     empleado = Empleado(
                         nombre_empleado=row['nombre_empleado'],
                         apellido_empleado=row['apellido_empleado'],
@@ -1005,12 +1000,13 @@ def carga_masiva():
                         direccion=row.get('direccion', ''),
                         cargo_establecido=row.get('cargo_establecido', 'Islero'),
                         usuario=row['usuario'],
-                        contrasena=hash_pwd,
                         temporal=True,
                         activo=row.get('activo', True),
-                        email_confirmado=True,  # Carga masiva: emails pre-confirmados
+                        email_confirmado=True,
                         aceptado_terminos=row.get('aceptado_terminos', False)
                     )
+                    empleado.set_password(temp_pass)
+
                     db.session.add(empleado)
                     count += 1
 
