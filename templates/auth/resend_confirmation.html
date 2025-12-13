@@ -22,8 +22,8 @@
         {% endif %}
     {% endwith %}
 
-    <div class="container">
-        <div class="row justify-content-center align-items-center min-vh-100">
+    <div class="container py-5">
+        <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
                 <div class="card shadow-lg p-4">
                     <div class="text-center mb-4">
@@ -34,6 +34,7 @@
                     </div>
 
                     <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-3">
                             <label for="email" class="form-label">Email *</label>
                             <input type="email" 
