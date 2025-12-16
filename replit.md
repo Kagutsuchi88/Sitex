@@ -40,6 +40,10 @@ The app uses Gmail SMTP for sending confirmation and password reset emails:
 **Note**: Gmail requires an "App Password" for third-party apps. Generate one at https://myaccount.google.com/apppasswords
 
 ## Recent Changes
+- 2025-12-16: Estadísticas reducidas a 2 métricas clave (Stock Bajo + Rendimiento Mensual)
+- 2025-12-16: Añadido botón para descargar reporte mensual en PDF con gráficas
+- 2025-12-16: Paginación de empleados cada 10 registros
+- 2025-12-16: Funcionalidad para cambiar rol de empleados desde el listado
 - 2025-12-13: Fixed vertical scrolling on login/register pages
 - 2025-12-13: Configured PostgreSQL database
 - 2025-12-13: Added Gmail SMTP credentials for email functionality
