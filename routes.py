@@ -506,86 +506,105 @@ def tanques():
 @login_required
 @admin_or_encargado_required
 def empleados():
-    empleados = Empleado.query.all()
-    return render_template("dashboard/empleados.html", empleados=empleados)
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
+    empleados_paginados = Empleado.query.order_by(
+        Empleado.cargo_establecido.asc(),
+        Empleado.nombre_empleado.asc()
+    ).paginate(page=page, per_page=per_page, error_out=False)
+    
+    return render_template(
+        "dashboard/empleados.html", 
+        empleados=empleados_paginados.items,
+        pagination=empleados_paginados
+    )
+
+
+@dashboard_bp.route("/empleados/cambiar-rol/<int:empleado_id>", methods=["POST"])
+@login_required
+@admin_or_encargado_required
+def cambiar_rol_empleado(empleado_id):
+    """Cambiar el rol de un empleado"""
+    empleado = Empleado.query.get_or_404(empleado_id)
+    nuevo_rol = request.form.get('nuevo_rol')
+    
+    if nuevo_rol not in ['admin', 'encargado', 'islero']:
+        flash("Rol no válido", "danger")
+        return redirect(url_for('dashboard.empleados'))
+    
+    if empleado.id_empleados == current_user.id_empleados:
+        flash("No puedes cambiar tu propio rol", "warning")
+        return redirect(url_for('dashboard.empleados'))
+    
+    if current_user.cargo_establecido == 'encargado' and nuevo_rol == 'admin':
+        flash("Solo los administradores pueden asignar el rol de administrador", "danger")
+        return redirect(url_for('dashboard.empleados'))
+    
+    rol_anterior = empleado.cargo_establecido
+    empleado.cargo_establecido = nuevo_rol
+    db.session.commit()
+    
+    registrar_auditoria('UPDATE', 'empleado', empleado.id_empleados, 
+                        {'cargo_establecido': rol_anterior}, 
+                        {'cargo_establecido': nuevo_rol})
+    
+    flash(f"Rol de {empleado.nombre_empleado} cambiado a {nuevo_rol.capitalize()}", "success")
+    return redirect(url_for('dashboard.empleados'))
 
 # routes.py - FUNCIÓN estadisticas() CORREGIDA
 # Reemplaza SOLO esta función en tu routes.py
 
 @dashboard_bp.route("/estadisticas")
 @login_required
+@admin_or_encargado_required
 def estadisticas():
-    """Dashboard de estadísticas paginado - VERSIÓN CORREGIDA"""
+    """Dashboard de estadísticas para toma de decisiones - 2 estadísticas clave"""
     from collections import OrderedDict
     
-    page = request.args.get('page', 1, type=int)
-    per_page = 5
-    
-    # ===== ESTADÍSTICA 1: GALONES CARGADOS POR SEMANA =====
     hoy = datetime.now()
-    hace_8_semanas = hoy - timedelta(weeks=8)
+    hace_30_dias = hoy - timedelta(days=30)
     
-    cargues = MedicionCargue.query.filter(
-        MedicionCargue.fecha >= hace_8_semanas
-    ).all()
-    
-    galones_por_semana = OrderedDict()
-    for cargue in cargues:
-        if cargue.fecha:
-            semana = cargue.fecha.isocalendar()[1]
-            año = cargue.fecha.year
-            key = f"{año}-W{semana:02d}"
-            
-            try:
-                galones = float(cargue.galones_totales or 0)
-                galones_por_semana[key] = galones_por_semana.get(key, 0) + galones
-            except (ValueError, TypeError):
-                continue
-    
-    # ===== ESTADÍSTICA 2: GALONES CARGADOS POR MES =====
-    hace_12_meses = hoy - timedelta(days=365)
-    
-    cargues_mes = MedicionCargue.query.filter(
-        MedicionCargue.fecha >= hace_12_meses
-    ).all()
-    
-    galones_por_mes = OrderedDict()
-    for cargue in cargues_mes:
-        if cargue.fecha:
-            key = cargue.fecha.strftime('%Y-%m')
-            mes_nombre = cargue.fecha.strftime('%B %Y')
-            
-            try:
-                galones = float(cargue.galones_totales or 0)
-                if key not in galones_por_mes:
-                    galones_por_mes[key] = {
-                        'nombre': mes_nombre,
-                        'galones': 0
-                    }
-                galones_por_mes[key]['galones'] += galones
-            except (ValueError, TypeError):
-                continue
-    
-    # ===== ESTADÍSTICA 3: GALONES VENDIDOS (DIFERENCIA DE MEDICIONES) =====
-    ventas_por_tipo = OrderedDict()
-    
+    # ===== ESTADÍSTICA 1: ALERTA DE TANQUES CON STOCK BAJO =====
     tanques = Tanque.query.filter_by(activo=True).all()
+    tanques_alerta = []
     
     for tanque in tanques:
+        porcentaje = tanque.porcentaje_llenado
+        contenido = tanque.contenido
+        capacidad = tanque.capacidad or 0
+        
+        if porcentaje < 30:
+            nivel = 'critico' if porcentaje < 15 else 'bajo'
+            tanques_alerta.append({
+                'id': tanque.id_tanques,
+                'tipo': tanque.tipo_combustible,
+                'contenido': round(contenido, 2),
+                'capacidad': capacidad,
+                'porcentaje': round(porcentaje, 1),
+                'nivel': nivel,
+                'galones_faltantes': round(capacidad - contenido, 2)
+            })
+    
+    tanques_alerta.sort(key=lambda x: x['porcentaje'])
+    
+    # ===== ESTADÍSTICA 2: RENDIMIENTO Y PÉRDIDAS DEL MES =====
+    ventas_por_tipo = OrderedDict()
+    cargado_por_tipo = OrderedDict()
+    
+    for tanque in tanques:
+        tipo = tanque.tipo_combustible
+        
         mediciones = RegistroMedida.query.filter(
             RegistroMedida.id_tanques == tanque.id_tanques,
-            RegistroMedida.fecha_hora_registro >= hoy - timedelta(days=30)
+            RegistroMedida.fecha_hora_registro >= hace_30_dias
         ).order_by(RegistroMedida.fecha_hora_registro.asc()).all()
         
         total_vendido = 0
         for i in range(1, len(mediciones)):
-            medicion_anterior = mediciones[i-1]
-            medicion_actual = mediciones[i]
-            
             try:
-                galones_anterior = float(medicion_anterior.galones or 0)
-                galones_actual = float(medicion_actual.galones or 0)
-                
+                galones_anterior = float(mediciones[i-1].galones or 0)
+                galones_actual = float(mediciones[i].galones or 0)
                 diferencia = galones_anterior - galones_actual
                 if diferencia > 0:
                     total_vendido += diferencia
@@ -593,110 +612,195 @@ def estadisticas():
                 continue
         
         if total_vendido > 0:
-            tipo = tanque.tipo_combustible
             ventas_por_tipo[tipo] = ventas_por_tipo.get(tipo, 0) + total_vendido
+        
+        cargues = MedicionCargue.query.filter(
+            MedicionCargue.id_tanques == tanque.id_tanques,
+            MedicionCargue.fecha >= hace_30_dias
+        ).all()
+        
+        for cargue in cargues:
+            try:
+                galones = float(cargue.galones_totales or 0)
+                cargado_por_tipo[tipo] = cargado_por_tipo.get(tipo, 0) + galones
+            except (ValueError, TypeError):
+                continue
     
-    # ===== ESTADÍSTICA 4: TOTAL CARGADO VS VENDIDO (ÚLTIMO MES) =====
-    total_cargado_mes = sum([v['galones'] for v in galones_por_mes.values()])
-    total_vendido_mes = sum(ventas_por_tipo.values())
+    total_cargado = sum(cargado_por_tipo.values())
+    total_vendido = sum(ventas_por_tipo.values())
+    diferencia = total_cargado - total_vendido
+    porcentaje_eficiencia = (total_vendido / total_cargado * 100) if total_cargado > 0 else 0
     
-    # ===== ESTADÍSTICA 5: PROMEDIO DE MEDICIONES POR DÍA =====
-    hace_30_dias = hoy - timedelta(days=30)
+    rendimiento = {
+        'total_cargado': round(total_cargado, 2),
+        'total_vendido': round(total_vendido, 2),
+        'diferencia': round(diferencia, 2),
+        'porcentaje_eficiencia': round(porcentaje_eficiencia, 1),
+        'estado': 'normal' if diferencia >= 0 else 'alerta',
+        'ventas_por_tipo': dict(ventas_por_tipo),
+        'cargado_por_tipo': dict(cargado_por_tipo)
+    }
     
-    mediciones_diarias = db.session.query(
-        func.date(RegistroMedida.fecha_hora_registro).label('fecha'),
-        func.count(RegistroMedida.id_registro_medidas).label('cantidad')
-    ).filter(
+    # ===== DATOS PARA REPORTE MENSUAL =====
+    ventas_por_dia = OrderedDict()
+    mediciones_mes = RegistroMedida.query.filter(
         RegistroMedida.fecha_hora_registro >= hace_30_dias
-    ).group_by(
-        func.date(RegistroMedida.fecha_hora_registro)
-    ).all()
+    ).order_by(RegistroMedida.fecha_hora_registro.asc()).all()
     
-    total_mediciones = sum([m.cantidad for m in mediciones_diarias])
-    promedio_mediciones = total_mediciones / max(len(mediciones_diarias), 1)
-    
-    # ===== PREPARAR DATOS PARA PAGINACIÓN =====
-    estadisticas = [
-        {
-            'numero': 1,
-            'titulo': 'Galones Cargados por Semana',
-            'descripcion': 'Cargues de emergencia de las últimas 8 semanas',
-            'tipo': 'bar',
-            'datos': dict(galones_por_semana),  # Convertir a dict normal
-            'unidad': 'galones'
-        },
-        {
-            'numero': 2,
-            'titulo': 'Galones Cargados por Mes',
-            'descripcion': 'Histórico de cargues de los últimos 12 meses',
-            'tipo': 'line',
-            'datos': dict(galones_por_mes),  # Convertir a dict normal
-            'unidad': 'galones'
-        },
-        {
-            'numero': 3,
-            'titulo': 'Galones Vendidos por Tipo de Combustible',
-            'descripcion': 'Ventas calculadas del último mes',
-            'tipo': 'pie',
-            'datos': dict(ventas_por_tipo),  # Convertir a dict normal
-            'unidad': 'galones'
-        },
-        {
-            'numero': 4,
-            'titulo': 'Comparativa: Cargado vs Vendido',
-            'descripcion': 'Balance del último mes',
-            'tipo': 'comparison',
-            'datos': {
-                'cargado': float(total_cargado_mes),
-                'vendido': float(total_vendido_mes),
-                'diferencia': float(total_cargado_mes - total_vendido_mes)
-            },
-            'unidad': 'galones'
-        },
-        {
-            'numero': 5,
-            'titulo': 'Promedio de Mediciones Diarias',
-            'descripcion': 'Actividad promedio de los últimos 30 días',
-            'tipo': 'metric',
-            'datos': {
-                'promedio': round(promedio_mediciones, 2),
-                'total_dias': len(mediciones_diarias),
-                'total_mediciones': total_mediciones
-            },
-            'unidad': 'mediciones/día'
-        }
-    ]
-    
-    # ===== PAGINACIÓN =====
-    total_estadisticas = len(estadisticas)
-    total_pages = (total_estadisticas + per_page - 1) // per_page
-    
-    start = (page - 1) * per_page
-    end = start + per_page
-    estadisticas_paginadas = estadisticas[start:end]
-    
-    # ===== DEBUG: Imprimir datos en consola del servidor =====
-    print("\n" + "="*60)
-    print("📊 DEBUG ESTADÍSTICAS")
-    print("="*60)
-    print(f"Página actual: {page}/{total_pages}")
-    print(f"Estadísticas en esta página: {len(estadisticas_paginadas)}")
-    
-    for stat in estadisticas_paginadas:
-        print(f"\n--- Estadística {stat['numero']}: {stat['titulo']} ---")
-        print(f"Tipo: {stat['tipo']}")
-        print(f"Datos: {stat['datos']}")
-        if stat['tipo'] in ['bar', 'line', 'pie']:
-            print(f"Cantidad de datos: {len(stat['datos'])}")
-    
-    print("="*60 + "\n")
+    for i in range(1, len(mediciones_mes)):
+        try:
+            fecha = mediciones_mes[i].fecha_hora_registro.strftime('%Y-%m-%d')
+            galones_anterior = float(mediciones_mes[i-1].galones or 0)
+            galones_actual = float(mediciones_mes[i].galones or 0)
+            diferencia = galones_anterior - galones_actual
+            if diferencia > 0:
+                ventas_por_dia[fecha] = ventas_por_dia.get(fecha, 0) + diferencia
+        except (ValueError, TypeError):
+            continue
     
     return render_template(
         'dashboard/estadisticas.html',
-        estadisticas=estadisticas_paginadas,
-        page=page,
-        total_pages=total_pages,
-        per_page=per_page
+        tanques_alerta=tanques_alerta,
+        rendimiento=rendimiento,
+        ventas_por_tipo=dict(ventas_por_tipo),
+        ventas_por_dia=dict(ventas_por_dia),
+        fecha_reporte=hoy.strftime('%B %Y')
+    )
+
+
+@dashboard_bp.route("/reporte-mensual")
+@login_required
+@admin_or_encargado_required
+def reporte_mensual():
+    """Generar reporte mensual en PDF"""
+    from io import BytesIO
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+    from reportlab.lib.units import inch
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from collections import OrderedDict
+    import base64
+    
+    hoy = datetime.now()
+    hace_30_dias = hoy - timedelta(days=30)
+    
+    tanques = Tanque.query.filter_by(activo=True).all()
+    ventas_por_tipo = OrderedDict()
+    ventas_por_dia = OrderedDict()
+    
+    for tanque in tanques:
+        tipo = tanque.tipo_combustible
+        mediciones = RegistroMedida.query.filter(
+            RegistroMedida.id_tanques == tanque.id_tanques,
+            RegistroMedida.fecha_hora_registro >= hace_30_dias
+        ).order_by(RegistroMedida.fecha_hora_registro.asc()).all()
+        
+        for i in range(1, len(mediciones)):
+            try:
+                fecha = mediciones[i].fecha_hora_registro.strftime('%Y-%m-%d')
+                dia_semana = mediciones[i].fecha_hora_registro.strftime('%A')
+                galones_anterior = float(mediciones[i-1].galones or 0)
+                galones_actual = float(mediciones[i].galones or 0)
+                diferencia = galones_anterior - galones_actual
+                if diferencia > 0:
+                    ventas_por_tipo[tipo] = ventas_por_tipo.get(tipo, 0) + diferencia
+                    ventas_por_dia[fecha] = ventas_por_dia.get(fecha, 0) + diferencia
+            except (ValueError, TypeError):
+                continue
+    
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
+    elements = []
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=24, textColor=colors.HexColor('#E10000'), alignment=1)
+    subtitle_style = ParagraphStyle('Subtitle', parent=styles['Normal'], fontSize=12, textColor=colors.grey, alignment=1)
+    
+    elements.append(Paragraph("REPORTE MENSUAL DE COMBUSTIBLE", title_style))
+    elements.append(Paragraph(f"Estación Hayuelos - {hoy.strftime('%B %Y')}", subtitle_style))
+    elements.append(Spacer(1, 0.3*inch))
+    
+    if ventas_por_tipo:
+        fig1, ax1 = plt.subplots(figsize=(6, 4))
+        colores = ['#E10000', '#00E1E1', '#00E100', '#FFA500', '#8A2BE2']
+        tipos = list(ventas_por_tipo.keys())
+        valores = list(ventas_por_tipo.values())
+        ax1.pie(valores, labels=tipos, autopct='%1.1f%%', colors=colores[:len(tipos)], startangle=90)
+        ax1.set_title('Combustible Más Vendido por Tipo', fontsize=14, fontweight='bold')
+        
+        img_buffer1 = BytesIO()
+        plt.savefig(img_buffer1, format='png', dpi=150, bbox_inches='tight')
+        plt.close(fig1)
+        img_buffer1.seek(0)
+        
+        elements.append(Image(img_buffer1, width=5*inch, height=3.5*inch))
+        elements.append(Spacer(1, 0.3*inch))
+    
+    if ventas_por_dia:
+        fig2, ax2 = plt.subplots(figsize=(8, 4))
+        fechas = list(ventas_por_dia.keys())[-14:]
+        valores_dias = [ventas_por_dia[f] for f in fechas]
+        fechas_cortas = [f[-5:] for f in fechas]
+        
+        barras = ax2.bar(fechas_cortas, valores_dias, color='#E10000', edgecolor='#C20000')
+        ax2.set_xlabel('Fecha', fontsize=10)
+        ax2.set_ylabel('Galones Vendidos', fontsize=10)
+        ax2.set_title('Días con Más Ventas (Últimas 2 Semanas)', fontsize=14, fontweight='bold')
+        plt.xticks(rotation=45, ha='right')
+        
+        for bar, val in zip(barras, valores_dias):
+            ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 5, f'{int(val)}', ha='center', va='bottom', fontsize=8)
+        
+        plt.tight_layout()
+        img_buffer2 = BytesIO()
+        plt.savefig(img_buffer2, format='png', dpi=150, bbox_inches='tight')
+        plt.close(fig2)
+        img_buffer2.seek(0)
+        
+        elements.append(Image(img_buffer2, width=6*inch, height=3*inch))
+        elements.append(Spacer(1, 0.3*inch))
+    
+    elements.append(Paragraph("RESUMEN DE CONSUMO POR TIPO", styles['Heading2']))
+    nota_style = ParagraphStyle('Nota', parent=styles['Normal'], fontSize=9, textColor=colors.grey, alignment=0)
+    elements.append(Paragraph("* Los datos de consumo se calculan a partir de las diferencias en las mediciones de inventario.", nota_style))
+    elements.append(Spacer(1, 0.1*inch))
+    if ventas_por_tipo:
+        data = [['Tipo de Combustible', 'Galones Vendidos', 'Porcentaje']]
+        total = sum(ventas_por_tipo.values())
+        for tipo, galones in ventas_por_tipo.items():
+            porcentaje = (galones / total * 100) if total > 0 else 0
+            data.append([tipo, f"{galones:,.0f}", f"{porcentaje:.1f}%"])
+        data.append(['TOTAL', f"{total:,.0f}", '100%'])
+        
+        table = Table(data, colWidths=[2.5*inch, 2*inch, 1.5*inch])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#E10000')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#FFE0E0')),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(table)
+    
+    elements.append(Spacer(1, 0.3*inch))
+    elements.append(Paragraph(f"Generado el {hoy.strftime('%d/%m/%Y a las %H:%M')}", subtitle_style))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f'reporte_mensual_{hoy.strftime("%Y_%m")}.pdf',
+        mimetype='application/pdf'
     )
 
 

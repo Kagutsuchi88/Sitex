@@ -42,3 +42,5 @@ Werkzeug==3.0.1
 WTForms==3.1.1
 xlsxwriter==3.1.9
 psycopg2-binary
+matplotlib
+reportlab

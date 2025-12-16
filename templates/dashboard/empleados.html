@@ -1,6 +1,68 @@
 {% extends "base.html" %}
 {% block title %}Empleados{% endblock %}
 
+{% block extra_css %}
+<style>
+.role-select {
+    min-width: 130px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    padding: 5px 10px;
+}
+
+.role-select.admin-select {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+}
+
+.role-select.encargado-select {
+    border-color: #ffc107;
+    background-color: #fffef5;
+}
+
+.role-select.islero-select {
+    border-color: #17a2b8;
+    background-color: #f5fcff;
+}
+
+.pagination-custom .page-link {
+    border-radius: 10px;
+    margin: 0 3px;
+    border: 2px solid #E10000;
+    color: #E10000;
+    font-weight: 600;
+}
+
+.pagination-custom .page-link:hover {
+    background: #E10000;
+    color: white;
+}
+
+.pagination-custom .page-item.active .page-link {
+    background: linear-gradient(135deg, #E10000 0%, #FF3030 100%);
+    border-color: #E10000;
+}
+
+.pagination-custom .page-item.disabled .page-link {
+    color: #6c757d;
+    border-color: #dee2e6;
+}
+
+.avatar-sm {
+    width: 35px;
+    height: 35px;
+}
+
+.empleado-row {
+    transition: all 0.2s ease;
+}
+
+.empleado-row:hover {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid py-4">
     <div class="row">
@@ -10,18 +72,23 @@
                     <h5 class="mb-0">
                         <i class="bi bi-people-fill me-2"></i> Gestión de Empleados
                     </h5>
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-sm">
-                        <i class="bi bi-person-plus"></i> Nuevo Empleado
-                    </a>
+                    <div>
+                        {% if pagination %}
+                        <span class="badge bg-light text-dark me-2">
+                            {{ pagination.total }} empleados
+                        </span>
+                        {% endif %}
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-sm">
+                            <i class="bi bi-person-plus"></i> Nuevo Empleado
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">
-                    <!-- Búsqueda -->
                     <div class="mb-3">
                         <input type="text" id="searchInput" class="form-control" placeholder="Buscar por nombre, usuario o documento...">
                     </div>
 
-                    <!-- Tabla -->
                     <div class="table-responsive">
                         <table class="table table-hover align-middle" id="empleadosTable">
                             <thead class="table-light">
@@ -37,8 +104,8 @@
                             </thead>
                             <tbody>
                                 {% for empleado in empleados %}
-                                <tr data-search="{{ empleado.nombre_empleado|lower }} {{ empleado.usuario|lower }} {{ empleado.numero_documento|lower }}">
-                                    <td>{{ loop.index }}</td>
+                                <tr class="empleado-row" data-search="{{ empleado.nombre_empleado|lower }} {{ empleado.usuario|lower }} {{ empleado.numero_documento|lower }}">
+                                    <td>{{ (pagination.page - 1) * pagination.per_page + loop.index if pagination else loop.index }}</td>
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <div class="avatar-sm me-3 bg-light rounded-circle d-flex align-items-center justify-content-center">
@@ -52,6 +119,27 @@
                                     <td><code>@{{ empleado.usuario }}</code></td>
                                     <td>{{ empleado.numero_documento }}</td>
                                     <td>
+                                        {% if current_user.cargo_establecido in ['admin', 'encargado'] and empleado.id_empleados != current_user.id_empleados %}
+                                        <form method="POST" action="{{ url_for('dashboard.cambiar_rol_empleado', empleado_id=empleado.id_empleados) }}" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <select name="nuevo_rol" class="form-select form-select-sm role-select 
+                                                {% if empleado.cargo_establecido == 'admin' %}admin-select
+                                                {% elif empleado.cargo_establecido == 'encargado' %}encargado-select
+                                                {% else %}islero-select{% endif %}"
+                                                onchange="if(confirm('¿Cambiar rol de {{ empleado.nombre_empleado }} a ' + this.value + '?')) this.form.submit(); else this.value='{{ empleado.cargo_establecido }}';">
+                                                <option value="admin" {% if empleado.cargo_establecido == 'admin' %}selected{% endif %}
+                                                    {% if current_user.cargo_establecido != 'admin' %}disabled{% endif %}>
+                                                    Administrador
+                                                </option>
+                                                <option value="encargado" {% if empleado.cargo_establecido == 'encargado' %}selected{% endif %}>
+                                                    Encargado
+                                                </option>
+                                                <option value="islero" {% if empleado.cargo_establecido == 'islero' %}selected{% endif %}>
+                                                    Islero
+                                                </option>
+                                            </select>
+                                        </form>
+                                        {% else %}
                                         {% if empleado.cargo_establecido == 'admin' %}
                                             <span class="badge bg-danger">
                                                 <i class="bi bi-shield-lock"></i> Administrador
@@ -65,6 +153,7 @@
                                                 <i class="bi bi-person-badge"></i> Islero
                                             </span>
                                         {% endif %}
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {% if empleado.activo %}
@@ -74,37 +163,67 @@
                                         {% endif %}
                                     </td>
                                     <td>
-    <div class="btn-group" role="group">
-        <!-- Resetear contraseña (admin Y encargado) -->
-        {% if current_user.cargo_establecido in ['admin', 'encargado'] %}
-        <form method="POST" action="{{ url_for('auth.resetear_clave_empleado', empleado_id=empleado.id_empleados) }}"
-              onsubmit="return confirm('¿Resetear contraseña de {{ empleado.usuario }}?')" style="display: inline;">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <button type="submit" class="btn btn-sm btn-warning" title="Resetear contraseña">
-                <i class="bi bi-key"></i>
-            </button>
-        </form>
-        {% endif %}
+                                        <div class="btn-group" role="group">
+                                            {% if current_user.cargo_establecido in ['admin', 'encargado'] %}
+                                            <form method="POST" action="{{ url_for('auth.resetear_clave_empleado', empleado_id=empleado.id_empleados) }}"
+                                                  onsubmit="return confirm('¿Resetear contraseña de {{ empleado.usuario }}?')" style="display: inline;">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <button type="submit" class="btn btn-sm btn-warning" title="Resetear contraseña">
+                                                    <i class="bi bi-key"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
 
-        <!-- Toggle activo/inactivo (admin Y encargado) -->
-        {% if current_user.cargo_establecido in ['admin', 'encargado'] %}
-        <form method="POST" action="{{ url_for('admin.toggle_empleado', empleado_id=empleado.id_empleados) }}" style="display: inline;">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <button type="submit" class="btn btn-sm {% if empleado.activo %}btn-outline-danger{% else %}btn-outline-success{% endif %}"
-                    title="{% if empleado.activo %}Desactivar{% else %}Activar{% endif %}">
-                <i class="bi {% if empleado.activo %}bi-toggle-off{% else %}bi-toggle-on{% endif %}"></i>
-            </button>
-        </form>
-        {% endif %}
-    </div>
-</td>
+                                            {% if current_user.cargo_establecido in ['admin', 'encargado'] %}
+                                            <form method="POST" action="{{ url_for('admin.toggle_empleado', empleado_id=empleado.id_empleados) }}" style="display: inline;">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <button type="submit" class="btn btn-sm {% if empleado.activo %}btn-outline-danger{% else %}btn-outline-success{% endif %}"
+                                                        title="{% if empleado.activo %}Desactivar{% else %}Activar{% endif %}">
+                                                    <i class="bi {% if empleado.activo %}bi-toggle-off{% else %}bi-toggle-on{% endif %}"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- Paginación (si usas paginate en el futuro) -->
+                    {% if pagination and pagination.pages > 1 %}
+                    <nav aria-label="Navegación de empleados" class="mt-4">
+                        <ul class="pagination pagination-custom justify-content-center">
+                            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('dashboard.empleados', page=pagination.prev_num) }}">
+                                    <i class="bi bi-chevron-left"></i> Anterior
+                                </a>
+                            </li>
+                            
+                            {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                                {% if p %}
+                                    <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                                        <a class="page-link" href="{{ url_for('dashboard.empleados', page=p) }}">{{ p }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('dashboard.empleados', page=pagination.next_num) }}">
+                                    Siguiente <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                    <div class="text-center text-muted">
+                        <small>Mostrando {{ (pagination.page - 1) * pagination.per_page + 1 }} - {{ [(pagination.page * pagination.per_page), pagination.total] | min }} de {{ pagination.total }} empleados</small>
+                    </div>
+                    {% endif %}
+
                     {% if empleados|length == 0 %}
                     <div class="text-center py-5 text-muted">
                         <i class="bi bi-people display-1"></i>
